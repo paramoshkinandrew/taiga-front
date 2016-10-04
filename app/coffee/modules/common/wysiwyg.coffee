@@ -27,14 +27,17 @@ bindOnce = @.taiga.bindOnce
 
 module = angular.module("taigaCommon")
 
-Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
+Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeout) ->
     link = ($scope, $el, $attrs) ->
         mediumInstance = null
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
-        isCommentMode = !!$attrs.$attr.comment
 
-        $scope.editMode = false
+        isEditOnly = !!$attrs.$attr.editonly
+        notPersist = !!$attrs.$attr.notPersist
+
+        $scope.editMode = isEditOnly || false
+
         $scope.mode = $storage.get('editor-mode', 'html')
 
         $scope.setMode = (mode) ->
@@ -61,7 +64,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
             return
 
         $scope.cancel = () ->
-            $scope.editMode = false
+            if !isEditOnly
+                $scope.editMode = false
 
             if $scope.mode == 'html'
                 html = getHTML($scope.content)
@@ -71,7 +75,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
 
             discardLocalStorage()
 
-            if isCommentMode
+            if notPersist
                 clean()
 
             return
@@ -79,14 +83,14 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
         clean = () ->
             $scope.markdown = ''
             editorMedium.html('')
-            create('', false)
+            mediumInstance.trigger('editableBlur', {}, editorMedium[0])
 
         saveEnd = () ->
             $scope.saving  = false
             $scope.editMode = false
             discardLocalStorage()
 
-            if isCommentMode
+            if notPersist
                 clean()
 
         uploadEnd = (name, url) ->
@@ -161,11 +165,10 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
                 $scope.cancel()
                 askResponse.finish()
 
-        # todo: comments
         localSave = (markdown) ->
-            if $scope.storageKey && $scope.version
+            if $scope.storageKey
                 store = {}
-                store.version = $scope.version
+                store.version = $scope.version || 0
                 store.text = markdown
 
                 $storage.set($scope.storageKey, store)
@@ -176,8 +179,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
             else
                 markdown = $scope.markdown
 
-            if !isCommentMode
-                localSave(markdown)
+            # TODO
+            # if !isCommentMode
+            #     localSave(markdown)
 
             $scope.onChange({markdown: markdown})
 
@@ -247,10 +251,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
 
         throttleChange = _.throttle(change, 1000)
 
-        create = (text, dirty) ->
-            if mediumInstance
-                mediumInstance.destroy()
-
+        create = (text, editMode=false) ->
             if text.length
                 html = getHTML(text)
                 editorMedium.html(html)
@@ -324,23 +325,24 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
                 else if code == 27
                     editorMedium.blur()
 
-            if dirty
+            if editMode
                 if $scope.mode == 'html'
                     editorMedium[0].focus() #tg-autofocus doesn't work in the initialization of medium
 
-                $scope.editMode = true
+            $scope.editMode = editMode
 
-        if isCommentMode
-            create('', false)
-        else
-            unwatch = $scope.$watch 'content', (content) ->
-                if !_.isUndefined(content)
-                    $scope.outdated = isOutdated()
-                    content = getCurrentContent()
+        unwatch = $scope.$watch 'content', (content) ->
+            if !_.isUndefined(content)
+                #$scope.outdated = isOutdated()
+                #isDraft = isDraft()
+                content = getCurrentContent()
 
-                    $scope.markdown = content
-                    create(content, isDraft())
-                    unwatch()
+                $scope.markdown = content
+
+                if mediumInstance
+                    mediumInstance.destroy()
+
+                create(content, $scope.editMode)
 
         $scope.$on "$destroy", () ->
             if mediumInstance
@@ -349,7 +351,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls) ->
     return {
         templateUrl: "common/components/wysiwyg-toolbar.html",
         scope: {
-            placeholder: '=',
+            options: '<',
+            placeholder: '@',
             version: '=',
             storageKey: '=',
             content: '<',
@@ -367,5 +370,6 @@ module.directive("tgMedium", [
     "$tgResources",
     "tgProjectService",
     "$tgNavUrls",
+    "$timeout",
     Medium
 ])

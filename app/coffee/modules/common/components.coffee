@@ -584,6 +584,7 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
         $scope.editableDescription = false
 
         $scope.saveComment = (description, cb) ->
+            $scope.content = ''
             $scope.vm.onAddComment({callback: cb})
 
         types = {
@@ -603,13 +604,13 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
             for file in files
                 uploadFile(file, cb)
 
+        $scope.content = ''
+
         $scope.$watch $attrs.model, (value) ->
             return if not value
             $scope.item = value
             $scope.version = value.version
             $scope.storageKey = $scope.project.id + "-" + value.id + "-" + $attrs.type
-
-        $scope.placeholder = $translate.instant('COMMENTS.TYPE_NEW_COMMENT')
 
     return {
         scope: true,
@@ -617,11 +618,10 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
         template: """
             <div>
                 <tg-medium
-                    placeholder='placeholder'
-                    comment
-                    version='version'
+                    not-persist
+                    placeholder='{{"COMMENTS.TYPE_NEW_COMMENT" | translate}}'
                     storage-key='storageKey'
-                    content=''
+                    content='content'
                     on-change="onChange(markdown)",
                     on-save='saveComment(text, cb)'
                     on-upload-file='uploadFiles(files, cb)'>
@@ -678,9 +678,6 @@ ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $tr
 
             $scope.editableDescription = project.my_permissions.indexOf($attrs.requiredPerm) != -1
 
-
-        $scope.placeholder = $translate.instant('COMMON.DESCRIPTION.EMPTY')
-
     return {
         scope: true,
         link: link,
@@ -688,7 +685,7 @@ ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $tr
             <div>
                 <tg-medium
                     ng-if="editableDescription"
-                    placeholder='placeholder'
+                    placeholder='{{"COMMON.DESCRIPTION.EMPTY" | translate}}'
                     version='version'
                     storage-key='storageKey'
                     content='item.description'
