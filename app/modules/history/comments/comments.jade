@@ -13,7 +13,7 @@ section.comments
             on-edit-mode="vm.onEditMode({commentId: commentId})"
             on-delete-comment="vm.onDeleteComment({commentId: commentId})"
             on-restore-deleted-comment="vm.onRestoreDeletedComment({commentId: commentId})"
-            on-edit-comment="vm.onEditComment({commentId: commentId, commentData: commentData})"
+            on-edit-comment="vm.onEditComment({commentId: commentId, commentData: commentData, callback: callback})"
         )
 
     tg-comment-medium(
@@ -21,24 +21,3 @@ section.comments
         on-update="updateComment(text)"
         type="vm.type"
     )
-
-    //- tg-editable-wysiwyg.add-comment(
-    //-     ng-model="vm.type"
-    //-     tg-check-permission="{{::vm.canAddCommentPermission}}"
-    //-     tg-toggle-comment
-    //- )
-    //-     textarea(
-    //-         ng-attr-placeholder="{{'COMMENTS.TYPE_NEW_COMMENT' | translate}}"
-    //-         tg-markitup="tg-markitup"
-    //-         ng-model="vm.type.comment"
-    //-     )
-
-    //-     .save-comment-wrapper
-    //-         button.button-green.save-comment(
-    //-             type="button"
-    //-             title="{{'COMMENTS.COMMENT' | translate}}"
-    //-             translate="COMMENTS.COMMENT"
-    //-             ng-disabled="!vm.type.comment.length || vm.loading"
-    //-             ng-click="vm.onAddComment()"
-    //-             tg-loading="vm.loading"
-    //-         )

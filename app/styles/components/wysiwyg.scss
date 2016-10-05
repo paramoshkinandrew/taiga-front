@@ -198,7 +198,7 @@ tg-medium {
             font-style: normal;
         }
     }
-    .markdown {
+    .markdown:not(.empty) {
         white-space: pre-line;
     }
     .read-mode {

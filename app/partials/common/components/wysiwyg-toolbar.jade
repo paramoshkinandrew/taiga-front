@@ -12,11 +12,12 @@
     )
 
     .markdown(
+        ng-class="{empty: !markdown.length}"
         ng-click="editMode = true"
         ng-show="mode == 'markdown' && !editMode"
     )
         p(ng-if="markdown.length") {{markdown}}
-        p.markdown-editor-placeholder(ng-if="!markdown.length", translate="COMMON.DESCRIPTION.EMPTY")
+        p.markdown-editor-placeholder.wysiwyg(ng-if="!markdown.length") {{placeholder}}
 
     .mode-editor(ng-if="editMode")
         span(

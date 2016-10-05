@@ -50,6 +50,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 editorMedium.html(html)
 
             $scope.mode = mode
+            mediumInstance.trigger('editableBlur', {}, editorMedium[0])
 
         $scope.save = () ->
             $scope.saving  = true
@@ -67,7 +68,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             if !isEditOnly
                 $scope.editMode = false
 
-            if $scope.mode == 'html'
+            if notPersist
+                clean()
+            else if $scope.mode == 'html'
                 html = getHTML($scope.content)
                 editorMedium.html(html)
             else
@@ -75,8 +78,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
             discardLocalStorage()
 
-            if notPersist
-                clean()
+            $scope.onCancel()
 
             return
 
@@ -87,11 +89,14 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         saveEnd = () ->
             $scope.saving  = false
-            $scope.editMode = false
-            discardLocalStorage()
+
+            if !isEditOnly
+                $scope.editMode = false
 
             if notPersist
                 clean()
+
+            discardLocalStorage()
 
         uploadEnd = (name, url) ->
             if taiga.isImage(name)
@@ -356,6 +361,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             version: '=',
             storageKey: '=',
             content: '<',
+            onCancel: '&',
             onSave: '&',
             onUploadFile: '&',
             onChange: '&'

@@ -6,7 +6,8 @@
     .read-mode {
         border: 1px solid $gray-light;
         height: 55px;
-        .medium-editor-placeholder {
+        .medium-editor-placeholder,
+        .markdown-editor-placeholder {
             height: 55px;
         }
     }
@@ -151,12 +152,6 @@
     }
     .deleted-comment-comment {
         margin-top: 1rem;
-    }
-    .comment-editor {
-        textarea {
-            height: 5rem;
-            min-height: 5rem;
-        }
     }
 }
 
