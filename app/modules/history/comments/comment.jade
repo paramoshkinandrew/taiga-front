@@ -27,14 +27,8 @@
                 ng-if="vm.editMode"
                 ng-keyup="vm.checkCancelComment($event)"
             )
-                .edit-comment(ng-model="vm.type")
-                    tg-medium(
-                        editonly,
-                        content='vm.comment.comment'
-                        on-save="vm.saveComment(text, cb)"
-                        on-cancel="vm.onEditMode({commentId: vm.comment.id})"
-                    )
-                    
+                tg-comment-edit-medium.edit-comment
+                        
     .comment-options(ng-if="vm.canEditDeleteComment() && !vm.editMode")
         tg-svg.comment-option(
             svg-icon="icon-edit"

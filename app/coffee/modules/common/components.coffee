@@ -579,12 +579,13 @@ module.directive("tgEditableSubject", ["$rootScope", "$tgRepo", "$tgConfirm", "$
                                        "$tgTemplate", EditableSubjectDirective])
 
 # comments
-CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $translate) ->
+CommentMedium = (attachmentsFullService) ->
     link = ($scope, $el, $attrs) ->
         $scope.editableDescription = false
 
         $scope.saveComment = (description, cb) ->
             $scope.content = ''
+            $scope.vm.type.comment = description
             $scope.vm.onAddComment({callback: cb})
 
         types = {
@@ -606,11 +607,10 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
 
         $scope.content = ''
 
-        $scope.$watch $attrs.model, (value) ->
+        $scope.$watch "vm.type", (value) ->
             return if not value
-            $scope.item = value
-            $scope.version = value.version
-            $scope.storageKey = $scope.project.id + "-" + value.id + "-" + $attrs.type
+
+            $scope.storageKey = "comment-" + value.project + "-" + value.id + "-" + value._name
 
     return {
         scope: true,
@@ -618,11 +618,11 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
         template: """
             <div>
                 <tg-medium
+                    required
                     not-persist
                     placeholder='{{"COMMENTS.TYPE_NEW_COMMENT" | translate}}'
                     storage-key='storageKey'
                     content='content'
-                    on-change="onChange(markdown)",
                     on-save='saveComment(text, cb)'
                     on-upload-file='uploadFiles(files, cb)'>
                 </tg-medium>
@@ -631,12 +631,51 @@ CommentMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, 
     }
 
 module.directive("tgCommentMedium", [
-    "$tgQueueModelTransformation",
-    "$rootScope",
-    "$tgConfirm",
     "tgAttachmentsFullService",
-    "$translate",
     CommentMedium])
+
+CommentEditMedium = (attachmentsFullService) ->
+    link = ($scope, $el, $attrs) ->
+        types = {
+            userstories: "us",
+            issues: "issue",
+            tasks: "task"
+        }
+
+        console.log $scope.vm
+
+        uploadFile = (file, cb) ->
+            console.log $scope.vm
+            console.log $scope.vm.projectId
+            console.log $scope.vm.comment.comment.id
+            console.log types[$scope.vm.comment.comment._name]
+            return attachmentsFullService.addAttachment($scope.vm.projectId, $scope.vm.comment.comment.id, types[$scope.vm.comment.comment._name], file).then (result) ->
+                cb(result.getIn(['file', 'name']), result.getIn(['file', 'url']))
+
+        $scope.uploadFiles = (files, cb) ->
+            for file in files
+                uploadFile(file, cb)
+
+    return {
+        scope: true,
+        link: link,
+        template: """
+            <div>
+                <tg-medium
+                    editonly
+                    required
+                    content='vm.comment.comment'
+                    on-save="vm.saveComment(text, cb)"
+                    on-cancel="vm.onEditMode({commentId: vm.comment.id})"
+                    on-upload-file='uploadFiles(files, cb)'>
+                </tg-medium>
+            </div>
+        """
+    }
+
+module.directive("tgCommentEditMedium", [
+    "tgAttachmentsFullService",
+    CommentEditMedium])
 
 # Used in details descriptions
 ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $translate) ->

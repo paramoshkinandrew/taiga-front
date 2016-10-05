@@ -41,6 +41,7 @@
 
 .tools(ng-if="editMode")
     a(
+        ng-class="{disabled: required && !markdown.length}"
         tg-loading="saving"
         href="#",
         ng-click="save()"

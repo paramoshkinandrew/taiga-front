@@ -231,7 +231,7 @@ $qqueue, $repo, $analytics, wikiHistoryService) ->
             onError = ->
                 $confirm.notify("error")
 
-            $scope.item.content = description
+            $scope.item.content =  description
 
             if $scope.item.id?
                 promise = $repo.save($scope.item).then(onSuccess, onError)

@@ -36,6 +36,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         isEditOnly = !!$attrs.$attr.editonly
         notPersist = !!$attrs.$attr.notPersist
 
+        $scope.required = !!$attrs.$attr.required
+
         $scope.editMode = isEditOnly || false
 
         $scope.mode = $storage.get('editor-mode', 'html')
@@ -53,14 +55,15 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             mediumInstance.trigger('editableBlur', {}, editorMedium[0])
 
         $scope.save = () ->
+            if $scope.mode == 'html'
+                $scope.markdown = getMarkdown(editorMedium.html())
+
+            return if $scope.required && !$scope.markdown.length
+
             $scope.saving  = true
+            $scope.outdated = false
 
-            if $scope.mode == 'markdown'
-                markdownText = $scope.markdown
-            else
-                markdownText = getMarkdown(editorMedium.html())
-
-            $scope.onSave({text: markdownText, cb: saveEnd})
+            $scope.onSave({text: $scope.markdown, cb: saveEnd})
 
             return
 
@@ -77,6 +80,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 $scope.markdown = $scope.content
 
             discardLocalStorage()
+            mediumInstance.trigger('blur', {}, editorMedium[0])
+            $scope.outdated = false
 
             $scope.onCancel()
 
@@ -85,7 +90,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         clean = () ->
             $scope.markdown = ''
             editorMedium.html('')
-            mediumInstance.trigger('editableBlur', {}, editorMedium[0])
 
         saveEnd = () ->
             $scope.saving  = false
@@ -97,6 +101,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 clean()
 
             discardLocalStorage()
+            mediumInstance.trigger('blur', {}, editorMedium[0])
 
         uploadEnd = (name, url) ->
             if taiga.isImage(name)
@@ -116,6 +121,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
 
             makdown = toMarkdown(html, {
+                gfm: true,
                 converters: [converter]
             })
 
@@ -124,7 +130,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         isOutdated = () ->
             store = $storage.get($scope.storageKey)
 
-            if store && store.version != $scope.version
+            if store && store.version && store.version != $scope.version
                 return true
 
             return false
@@ -146,14 +152,13 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             return $scope.content
 
         discardLocalStorage = () ->
-            $storage.outdated = false
             $storage.remove($scope.storageKey)
-            $scope.outdated = false
 
         getHTML = (text) ->
             return "" if !text || !text.length
 
             converter = new showdown.Converter()
+            converter.setOption("strikethrough", true)
 
             html = converter.makeHtml(text)
 
@@ -175,20 +180,15 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 store = {}
                 store.version = $scope.version || 0
                 store.text = markdown
-
                 $storage.set($scope.storageKey, store)
 
         change = () ->
             if $scope.mode == 'html'
-                markdown = getMarkdown(editorMedium.html())
-            else
-                markdown = $scope.markdown
+                $scope.markdown = getMarkdown(editorMedium.html())
 
-            # TODO
-            # if !isCommentMode
-            #     localSave(markdown)
+            localSave($scope.markdown)
 
-            $scope.onChange({markdown: markdown})
+            $scope.onChange({markdown: $scope.markdown})
 
         cancelablePromise = null
 
@@ -272,7 +272,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                     buttons: [
                         'bold',
                         'italic',
-                        'underline',
+                        'strikethrough',
                         'anchor',
                         'image',
                         'orderedlist',
@@ -330,16 +330,18 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 else if code == 27
                     editorMedium.blur()
 
-            if editMode
-                if $scope.mode == 'html'
-                    editorMedium[0].focus() #tg-autofocus doesn't work in the initialization of medium
-
             $scope.editMode = editMode
 
-        unwatch = $scope.$watch 'content', (content) ->
+        $scope.$watch 'content', (content) ->
             if !_.isUndefined(content)
-                #$scope.outdated = isOutdated()
-                #isDraft = isDraft()
+                $scope.outdated = isOutdated()
+
+                if !mediumInstance && isDraft()
+                    $scope.editMode = true
+
+                if $scope.markdown == content
+                    return
+
                 content = getCurrentContent()
 
                 $scope.markdown = content
@@ -356,10 +358,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
     return {
         templateUrl: "common/components/wysiwyg-toolbar.html",
         scope: {
-            options: '<',
             placeholder: '@',
-            version: '=',
-            storageKey: '=',
+            version: '<',
+            storageKey: '<',
             content: '<',
             onCancel: '&',
             onSave: '&',
