@@ -29,6 +29,22 @@ module = angular.module("taigaCommon")
 
 Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeout) ->
     link = ($scope, $el, $attrs) ->
+        # -> input markdown
+        # a
+        # b
+        # c
+        # -> output html
+        # <p>a</br>
+        # b</br>
+        # c</p>
+        showdown.extension 'newline', () ->
+            return [{
+              type: 'lang',
+              filter: (text) ->
+                  return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e) ->
+                      return e.trim() + "  \n"
+            }]
+
         mediumInstance = null
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
@@ -157,7 +173,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         getHTML = (text) ->
             return "" if !text || !text.length
 
-            converter = new showdown.Converter()
+            converter = new showdown.Converter({ extensions: ['newline'] })
             converter.setOption("strikethrough", true)
 
             html = converter.makeHtml(text)
