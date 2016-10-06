@@ -183,6 +183,7 @@ paths.libs = [
     paths.modules + "medium-editor/dist/js/medium-editor.js",
     paths.modules + "to-markdown/dist/to-markdown.js",
     paths.modules + "showdown/dist/showdown.js",
+    paths.vendor + "highlight.js/lib/highlight.js",
     paths.vendor + "medium-editor-autolist/dist/autolist.js",
     paths.app + "js/dom-autoscroller.js",
     paths.app + "js/dragula-drag-multiple.js",
