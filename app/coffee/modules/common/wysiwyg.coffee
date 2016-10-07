@@ -314,7 +314,10 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
             $scope.changeMarkdown = throttleChange
 
-            mediumInstance.subscribe 'editableInput', () ->
+            mediumInstance.subscribe 'editableInput', (e) ->
+                $('pre').each (i, block) ->
+                    hljs.highlightBlock(block)
+
                 $scope.$applyAsync(throttleChange)
 
             mediumInstance.subscribe "editableClick", (e) ->
