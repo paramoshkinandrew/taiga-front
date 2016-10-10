@@ -27,24 +27,52 @@ bindOnce = @.taiga.bindOnce
 
 module = angular.module("taigaCommon")
 
+# -> input markdown
+# a
+# b
+# c
+# -> output html
+# <p>a</br>
+# b</br>
+# c</p>
+showdown.extension 'newline', () ->
+    return [{
+      type: 'lang',
+      filter: (text) ->
+          return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e) ->
+              return e.trim() + "  \n"
+    }]
+
+CodeButton = MediumEditor.Extension.extend({
+    name: 'code',
+    init: () ->
+        this.button = this.document.createElement('button')
+        this.button.classList.add('medium-editor-action')
+        this.button.innerHTML = '<b>Code</b>'
+        this.button.title = 'Code'
+        this.on(this.button, 'click', this.handleClick.bind(this))
+
+    getButton: () ->
+        return this.button
+
+    handleClick: (event) ->
+        console.log "-------------"
+        range = MediumEditor.selection.getSelectionRange(self.document)
+
+        console.log range
+
+        pre = document.createElement('pre');
+        code = document.createElement('code');
+
+        pre.appendChild(code)
+        code.appendChild(range.extractContents())
+        range.insertNode(pre)
+
+        this.base.checkContentChanged()
+})
+
 Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeout) ->
     link = ($scope, $el, $attrs) ->
-        # -> input markdown
-        # a
-        # b
-        # c
-        # -> output html
-        # <p>a</br>
-        # b</br>
-        # c</p>
-        showdown.extension 'newline', () ->
-            return [{
-              type: 'lang',
-              filter: (text) ->
-                  return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e) ->
-                      return e.trim() + "  \n"
-            }]
-
         mediumInstance = null
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
@@ -297,13 +325,15 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                         'h2',
                         'h3',
                         'quote',
-                        'pre'
+                        'code'
                     ]
                 },
                 extensions: {
+                    code: new CodeButton(),
                     autolist: new AutoList(),
                     mediumMention: new MentionExtension({
                         getItems: (mention, mentionCb) ->
+                            console.log mention
                             if '#'.indexOf(mention[0]) != -1
                                 searchItem(mention.replace('#', '')).then(mentionCb)
                             else if '@'.indexOf(mention[0]) != -1
@@ -314,9 +344,13 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
             $scope.changeMarkdown = throttleChange
 
+            disableHighlighter = () ->
+
+            enableHighlighter = () ->
+
             mediumInstance.subscribe 'editableInput', (e) ->
-                $('pre').each (i, block) ->
-                    hljs.highlightBlock(block)
+                # $('pre').each (i, block) ->
+                #     hljs.highlightBlock(block)
 
                 $scope.$applyAsync(throttleChange)
 
@@ -369,6 +403,12 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                     mediumInstance.destroy()
 
                 create(content, $scope.editMode)
+
+        $scope.$on "editMode", (editMode) ->
+            if editMode
+                disableHighlighter()
+            else
+                enableHighlighter()
 
         $scope.$on "$destroy", () ->
             if mediumInstance
