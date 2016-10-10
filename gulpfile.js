@@ -1,4 +1,5 @@
 var gulp = require("gulp"),
+    fs = require('fs'),
     imagemin = require("gulp-imagemin"),
     jade = require("gulp-jade"),
     coffee = require("gulp-coffee"),
@@ -201,6 +202,51 @@ var isDeploy = argv["_"].indexOf("deploy") !== -1;
 # Layout/CSS Related tasks
 ##############################################################################
 */
+
+gulp.task("emoji", function(cb) {
+    // don't add to package.json
+    var Jimp = require("jimp");
+
+    //var emojiFolder = "";
+    var emojiPath = "../emoji-data/";
+
+    var emojis = require(emojiPath + "emoji.json");
+
+    emojis = emojis.filter(function(emoji) {
+        return emoji.has_img_twitter;
+    });
+
+    emojis = emojis.map(function(emoji) {
+        return {
+            name: emoji.short_name,
+            image: emoji.image
+        };
+    });
+
+    emojis = emojis.sort(function(a, b) {
+        if(a.name < b.name) return -1;
+        if(a.name > b.name) return 1;
+        return 0;
+    });
+
+    emojis.forEach(function(emoji) {
+        Jimp.read(emojiPath + "img-twitter-64/" + emoji.image, function (err, lenna) {
+            if (err) throw err;
+
+            lenna
+                .resize(16, 16)
+                .quality(100)
+                .write(__dirname + '/emojis/' + emoji.image);
+        });
+    });
+
+    var emojisStr = JSON.stringify(emojis);
+    fs.writeFileSync(__dirname + '/emojis/emojis-data.json', emojisStr, {
+        flag: 'w+'
+    });
+
+    cb();
+});
 
 var jadeIncludes = paths.app +'partials/includes/**/*';
 
@@ -533,6 +579,11 @@ gulp.task("copy-images", function() {
         .pipe(gulp.dest(paths.distVersion + "/images/"));
 });
 
+gulp.task("copy-emojis", function() {
+    return gulp.src([__dirname+ "/emojis/*"])
+        .pipe(gulp.dest(paths.distVersion + "/emojis/"));
+});
+
 gulp.task("copy-theme-images", function() {
     return gulp.src(themes.current.path + "/images/**/*")
         .pipe(gulpif(isDeploy, imagemin({progressive: true})))
@@ -548,6 +599,7 @@ gulp.task("copy", [
     "copy-fonts",
     "copy-theme-fonts",
     "copy-images",
+    "copy-emojis",
     "copy-theme-images",
     "copy-svg",
     "copy-theme-svg",
@@ -583,6 +635,7 @@ gulp.task("express", function() {
     app.use("/" + version + "/js", express.static(__dirname + "/dist/" + version + "/js"));
     app.use("/" + version + "/styles", express.static(__dirname + "/dist/" + version + "/styles"));
     app.use("/" + version + "/images", express.static(__dirname + "/dist/" + version + "/images"));
+    app.use("/" + version + "/emojis", express.static(__dirname + "/dist/" + version + "/emojis"));
     app.use("/" + version + "/svg", express.static(__dirname + "/dist/" + version + "/svg"));
     app.use("/" + version + "/partials", express.static(__dirname + "/dist/" + version + "/partials"));
     app.use("/" + version + "/fonts", express.static(__dirname + "/dist/" + version + "/fonts"));

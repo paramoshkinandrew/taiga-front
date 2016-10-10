@@ -34,7 +34,7 @@ var MentionExtension = MediumEditor.Extension.extend({
             this.word = this.getLastWord(textContent);
             textContent = textContent.substring(0, endChar);
 
-            if (this.word.length > 1 && ['@', '#'].indexOf(this.word[0]) != -1) {
+            if (this.word.length > 1 && ['@', '#', ':'].indexOf(this.word[0]) != -1) {
                 this.wrap();
                 this.showPanel();
 
@@ -98,24 +98,39 @@ var MentionExtension = MediumEditor.Extension.extend({
         this.mentionPanel.style.left = this.window.pageXOffset + bound.left + 'px';
     },
     selectMention: function(item) {
-        var link = document.createElement('a');
+        if (item.image) {
+            var img = document.createElement('img');
+            img.src = item.image;
 
-        link.setAttribute('href', item.url);
-
-        if (item.ref) {
-            link.innerText = '#' + item.ref + '-' + item.subject;
+            this.wordNode.parentNode.replaceChild(img, this.wordNode);
+            this.wordNode = img;
         } else {
-            link.innerText = '@' + item.username;
-        }
+            var link = document.createElement('a');
 
-        this.wordNode.parentNode.replaceChild(link, this.wordNode);
-        this.wordNode = link;
+            link.setAttribute('href', item.url);
+
+            if (item.ref) {
+                link.innerText = '#' + item.ref + '-' + item.subject;
+            } else {
+                link.innerText = '@' + item.username;
+            }
+
+            this.wordNode.parentNode.replaceChild(link, this.wordNode);
+            this.wordNode = link;
+        }
 
         var textNode = this.document.createTextNode('');
         textNode.textContent = '\u00A0';
 
         this.wordNode.parentNode.insertBefore(textNode, this.wordNode.nextSibling);
         MediumEditor.selection.select(this.document, textNode, 1);
+
+        var target = this.base.getFocusedElement();
+
+        this.base.events.updateInput(target, {
+          target,
+          currentTarget: target
+        });
 
         this.hidePanel();
         this.reset();
@@ -129,9 +144,10 @@ var MentionExtension = MediumEditor.Extension.extend({
 
         var  el = this.document.createElement('div');
         el.classList.add('medium-editor-mention-panel');
-
         this.mentionPanel = el;
         this.getEditorOption('elementsContainer').appendChild(el);
+
+        this.refreshPositionPanel();
         this.getItems(this.word, this.renderPanel.bind(this));
     },
     keyDownMentionPanel: function(e) {
@@ -182,7 +198,18 @@ var MentionExtension = MediumEditor.Extension.extend({
         items.forEach(function(it) {
             var li = this.document.createElement('li');
 
-            if (it.ref) {
+            if (it.image) {
+                var img = this.document.createElement('img');
+
+                img.src = it.image;
+                li.appendChild(img);
+
+                var textNode = document.createTextNode('');
+                textNode.textContent = ' ' + it.name;
+
+                li.appendChild(textNode);
+
+            } else if (it.ref) {
                 li.innerText = '#' + it.ref + ' - ' + it.subject;
             } else {
                 li.innerText = '@' + it.username;

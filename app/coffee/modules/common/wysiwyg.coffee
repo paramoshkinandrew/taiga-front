@@ -56,10 +56,7 @@ CodeButton = MediumEditor.Extension.extend({
         return this.button
 
     handleClick: (event) ->
-        console.log "-------------"
         range = MediumEditor.selection.getSelectionRange(self.document)
-
-        console.log range
 
         pre = document.createElement('pre');
         code = document.createElement('code');
@@ -77,6 +74,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
 
+        emojis = []
+
         isEditOnly = !!$attrs.$attr.editonly
         notPersist = !!$attrs.$attr.notPersist
 
@@ -85,6 +84,12 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         $scope.editMode = isEditOnly || false
 
         $scope.mode = $storage.get('editor-mode', 'html')
+
+        $.getJSON("/#{window._version}/emojis/emojis-data.json").then (listEmojis) ->
+            emojis = _.map listEmojis, (it) ->
+                it.image = "/#{window._version}/emojis/" + it.image
+
+                return it
 
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
@@ -236,6 +241,13 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         cancelablePromise = null
 
+        searchEmoji = (name, cb) ->
+            filteredEmojis = _.filter emojis, (it) -> it.name.indexOf(name) != -1
+
+            filteredEmojis = filteredEmojis.slice(0, 10)
+
+            cb(filteredEmojis)
+
         searchUser = (term, cb) ->
             searchProps = ['username', 'full_name', 'full_name_display']
 
@@ -333,11 +345,12 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                     autolist: new AutoList(),
                     mediumMention: new MentionExtension({
                         getItems: (mention, mentionCb) ->
-                            console.log mention
                             if '#'.indexOf(mention[0]) != -1
                                 searchItem(mention.replace('#', '')).then(mentionCb)
                             else if '@'.indexOf(mention[0]) != -1
                                 searchUser(mention.replace('@', ''), mentionCb)
+                            else if ':'.indexOf(mention[0]) != -1
+                                searchEmoji(mention.replace(':', ''), mentionCb)
                     })
                 }
             })
