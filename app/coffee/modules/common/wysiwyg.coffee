@@ -91,6 +91,44 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
                 return it
 
+        getEmojiById = (id) ->
+            return _.find emojis, (it) -> it.id == id
+
+        getEmojiByName = (name) ->
+            return _.find emojis, (it) -> it.name == name
+
+        replaceEmojiNameByImgs = (text) ->
+            emojiIds = getMatches(text, /:([^: ]*):/g)
+
+            for emojiId in emojiIds
+                regexImgs = new RegExp(':' + emojiId + ':', 'g')
+                emoji = getEmojiByName(emojiId)
+
+                if emoji
+                    text = text.replace(regexImgs, '![alt](' + emoji.image + ')')
+
+            return text
+
+        replaceImgsByEmojiName = (html) ->
+            emojiIds = getMatches(html, /emojis\/([^"]+).png"/gi)
+
+            for emojiId in emojiIds
+                regexImgs = new RegExp('<img(.*)' + emojiId + '[^>]+\>', 'g')
+                emoji = getEmojiById(emojiId)
+                html = html.replace(regexImgs, ':' + emoji.name + ':')
+
+            return html
+
+        getMatches = (string, regex, index) ->
+            index || (index = 1)
+            matches = []
+            match = null
+
+            while match = regex.exec(string)
+                matches.push(match[index])
+
+            return matches
+
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
 
@@ -169,6 +207,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
             html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
 
+            html = replaceImgsByEmojiName(html)
+
             makdown = toMarkdown(html, {
                 gfm: true,
                 converters: [converter]
@@ -209,7 +249,11 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             converter = new showdown.Converter({ extensions: ['newline'] })
             converter.setOption("strikethrough", true)
 
+            text = replaceEmojiNameByImgs(text)
+
+            console.log text
             html = converter.makeHtml(text)
+            console.log html
 
             html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
             html = html.replace("<em>", "<i>").replace("</em>", "</i>")

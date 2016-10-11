@@ -219,7 +219,8 @@ gulp.task("emoji", function(cb) {
     emojis = emojis.map(function(emoji) {
         return {
             name: emoji.short_name,
-            image: emoji.image
+            image: emoji.image,
+            id: emoji.unified.toLowerCase()
         };
     });
 
