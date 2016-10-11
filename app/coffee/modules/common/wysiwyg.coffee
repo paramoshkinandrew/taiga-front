@@ -75,6 +75,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         editorMarkdown = $el.find('.markdown')
 
         emojis = []
+        languages = []
 
         isEditOnly = !!$attrs.$attr.editonly
         notPersist = !!$attrs.$attr.notPersist
@@ -88,6 +89,12 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         $.getJSON("/#{window._version}/emojis/emojis-data.json").then (listEmojis) ->
             emojis = _.map listEmojis, (it) ->
                 it.image = "/#{window._version}/emojis/" + it.image
+
+                return it
+
+        $.getJSON("/#{window._version}/prism/prism-languages.json").then (languages) ->
+            languages = _.map languages, (it) ->
+                languages.url = "/#{window._version}/prism/" + it.file
 
                 return it
 
@@ -251,7 +258,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
             text = replaceEmojiNameByImgs(text)
 
-            console.log text
             html = converter.makeHtml(text)
             console.log html
 

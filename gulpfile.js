@@ -76,6 +76,7 @@ paths.css_vendor = [
     paths.modules + "medium-editor/dist/css/medium-editor.css",
     paths.modules + "medium-editor/dist/css/themes/default.css",
     paths.modules + "highlight.js/styles/default.css",
+    paths.modules + "prismjs/themes/prism-okaidia.css"
 ];
 paths.locales = paths.app + "locales/**/*.json";
 paths.modulesLocales = paths.app + "modules/**/locales/*.json";
@@ -186,6 +187,7 @@ paths.libs = [
     paths.modules + "to-markdown/dist/to-markdown.js",
     paths.modules + "showdown/dist/showdown.js",
     paths.modules + "highlight.js/lib/highlight.js",
+    paths.modules + "prismjs/prism.js",
     paths.vendor + "medium-editor-autolist/dist/autolist.js",
     paths.app + "js/dom-autoscroller.js",
     paths.app + "js/dragula-drag-multiple.js",
@@ -202,52 +204,6 @@ var isDeploy = argv["_"].indexOf("deploy") !== -1;
 # Layout/CSS Related tasks
 ##############################################################################
 */
-
-gulp.task("emoji", function(cb) {
-    // don't add to package.json
-    var Jimp = require("jimp");
-
-    //var emojiFolder = "";
-    var emojiPath = "../emoji-data/";
-
-    var emojis = require(emojiPath + "emoji.json");
-
-    emojis = emojis.filter(function(emoji) {
-        return emoji.has_img_twitter;
-    });
-
-    emojis = emojis.map(function(emoji) {
-        return {
-            name: emoji.short_name,
-            image: emoji.image,
-            id: emoji.unified.toLowerCase()
-        };
-    });
-
-    emojis = emojis.sort(function(a, b) {
-        if(a.name < b.name) return -1;
-        if(a.name > b.name) return 1;
-        return 0;
-    });
-
-    emojis.forEach(function(emoji) {
-        Jimp.read(emojiPath + "img-twitter-64/" + emoji.image, function (err, lenna) {
-            if (err) throw err;
-
-            lenna
-                .resize(16, 16)
-                .quality(100)
-                .write(__dirname + '/emojis/' + emoji.image);
-        });
-    });
-
-    var emojisStr = JSON.stringify(emojis);
-    fs.writeFileSync(__dirname + '/emojis/emojis-data.json', emojisStr, {
-        flag: 'w+'
-    });
-
-    cb();
-});
 
 var jadeIncludes = paths.app +'partials/includes/**/*';
 
@@ -440,6 +396,76 @@ gulp.task("styles-dependencies", function(cb) {
 # JS Related tasks
 ##############################################################################
 */
+
+gulp.task("prism-languages", function(cb) {
+    var files = fs.readdirSync(paths.modules + "prismjs/components");
+
+    files = files.filter(function(file) {
+        return file.indexOf('.min.js') != -1;
+    });
+
+    files = files.map(function(file) {
+        return {
+            file: file,
+            name: /prism-(.*)\.min\.js/g.exec(file)[1]
+        };
+    });
+
+    var filesStr = JSON.stringify(files);
+
+    fs.writeFileSync(__dirname + '/prism-languages.json', filesStr, {
+        flag: 'w+'
+    });
+
+    cb();
+});
+
+gulp.task("emoji", function(cb) {
+    // don't add to package.json
+    var Jimp = require("jimp");
+
+    //var emojiFolder = "";
+    var emojiPath = "../emoji-data/";
+
+    var emojis = require(emojiPath + "emoji.json");
+
+    emojis = emojis.filter(function(emoji) {
+        return emoji.has_img_twitter;
+    });
+
+    emojis = emojis.map(function(emoji) {
+        return {
+            name: emoji.short_name,
+            image: emoji.image,
+            id: emoji.unified.toLowerCase()
+        };
+    });
+
+    emojis = emojis.sort(function(a, b) {
+        if(a.name < b.name) return -1;
+        if(a.name > b.name) return 1;
+        return 0;
+    });
+
+    emojis.forEach(function(emoji) {
+        Jimp.read(emojiPath + "img-twitter-64/" + emoji.image, function (err, lenna) {
+            if (err) throw err;
+
+            lenna
+                .resize(16, 16)
+                .quality(100)
+                .write(__dirname + '/emojis/' + emoji.image);
+        });
+    });
+
+    var emojisStr = JSON.stringify(emojis);
+    fs.writeFileSync(__dirname + '/emojis/emojis-data.json', emojisStr, {
+        flag: 'w+'
+    });
+
+    cb();
+});
+
 gulp.task("conf", function() {
     return gulp.src(["conf/conf.example.json"])
         .pipe(gulp.dest(paths.dist));
@@ -581,8 +607,19 @@ gulp.task("copy-images", function() {
 });
 
 gulp.task("copy-emojis", function() {
-    return gulp.src([__dirname+ "/emojis/*"])
+    return gulp.src([__dirname + "/emojis/*"])
         .pipe(gulp.dest(paths.distVersion + "/emojis/"));
+});
+
+gulp.task("copy-prism", function() {
+    var prismLanguages = require(__dirname + '/prism-languages.json');
+
+    prismLanguages = prismLanguages.map(function(it) {
+        return paths.modules + "prismjs/components/" + it.file;
+    });
+
+    return gulp.src(prismLanguages.concat(__dirname + '/prism-languages.json'))
+        .pipe(gulp.dest(paths.distVersion + "/prism/"));
 });
 
 gulp.task("copy-theme-images", function() {
@@ -601,6 +638,7 @@ gulp.task("copy", [
     "copy-theme-fonts",
     "copy-images",
     "copy-emojis",
+    "copy-prism",
     "copy-theme-images",
     "copy-svg",
     "copy-theme-svg",
