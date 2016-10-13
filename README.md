@@ -39,6 +39,7 @@ Every code patch accepted in taiga codebase is licensed under [AGPL v3.0](http:/
 
 Please read carefully [our license](https://github.com/taigaio/taiga-front/blob/master/LICENSE) and ask us if you have any questions.
 
+Emoji provided free by [Twemoji](https://github.com/twitter/twemoji)
 
 #### Bug reports, enhancements and support ####
 
