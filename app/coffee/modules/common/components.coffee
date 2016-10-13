@@ -642,13 +642,7 @@ CommentEditMedium = (attachmentsFullService) ->
             tasks: "task"
         }
 
-        console.log $scope.vm
-
         uploadFile = (file, cb) ->
-            console.log $scope.vm
-            console.log $scope.vm.projectId
-            console.log $scope.vm.comment.comment.id
-            console.log types[$scope.vm.comment.comment._name]
             return attachmentsFullService.addAttachment($scope.vm.projectId, $scope.vm.comment.comment.id, types[$scope.vm.comment.comment._name], file).then (result) ->
                 cb(result.getIn(['file', 'name']), result.getIn(['file', 'url']))
 

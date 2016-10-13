@@ -230,6 +230,16 @@ patch = (oldImmutable, newImmutable) ->
 
     return pathObj
 
+getMatches = (string, regex, index) ->
+    index || (index = 1)
+    matches = []
+    match = null
+
+    while match = regex.exec(string)
+        matches.push(match[index])
+
+    return matches
+
 taiga = @.taiga
 taiga.addClass = addClass
 taiga.nl2br = nl2br
@@ -257,3 +267,4 @@ taiga.defineImmutableProperty = defineImmutableProperty
 taiga.isImage = isImage
 taiga.isPdf = isPdf
 taiga.patch = patch
+taiga.getMatches = getMatches

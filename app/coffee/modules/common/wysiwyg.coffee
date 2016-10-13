@@ -27,6 +27,7 @@ bindOnce = @.taiga.bindOnce
 
 module = angular.module("taigaCommon")
 
+# showdown extension
 # -> input markdown
 # a
 # b
@@ -43,6 +44,7 @@ showdown.extension 'newline', () ->
               return e.trim() + "  \n"
     }]
 
+# MediumEditor extension to add <code>
 CodeButton = MediumEditor.Extension.extend({
     name: 'code',
     init: () ->
@@ -68,13 +70,90 @@ CodeButton = MediumEditor.Extension.extend({
         this.base.checkContentChanged()
 })
 
-Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeout) ->
+class WysiwigService
+    searchEmojiByName: (name) ->
+        return _.filter @.emojis, (it) -> it.name.indexOf(name) != -1
+
+    setEmojiImagePath: (emojis) ->
+        @.emojis = _.map emojis, (it) ->
+            it.image = "/#{window._version}/emojis/" + it.image
+
+            return it
+
+    loadEmojis: () ->
+        $.getJSON("/#{window._version}/emojis/emojis-data.json").then(@.setEmojiImagePath.bind(this))
+
+    getEmojiById: (id) ->
+        return _.find  @.emojis, (it) -> it.id == id
+
+    getEmojiByName: (name) ->
+        return _.find @.emojis, (it) -> it.name == name
+
+    replaceImgsByEmojiName: (html) ->
+        emojiIds = taiga.getMatches(html, /emojis\/([^"]+).png"/gi)
+
+        for emojiId in emojiIds
+            regexImgs = new RegExp('<img(.*)' + emojiId + '[^>]+\>', 'g')
+            emoji = @.getEmojiById(emojiId)
+            html = html.replace(regexImgs, ':' + emoji.name + ':')
+
+        return html
+
+    replaceEmojiNameByImgs: (text) ->
+        emojiIds = taiga.getMatches(text, /:([^: ]*):/g)
+
+        for emojiId in emojiIds
+            regexImgs = new RegExp(':' + emojiId + ':', 'g')
+            emoji = @.getEmojiByName(emojiId)
+
+            if emoji
+                text = text.replace(regexImgs, '![alt](' + emoji.image + ')')
+
+        return text
+
+    getMarkdown: (html) ->
+        # https://github.com/yabwe/medium-editor/issues/543
+        converter = {
+            filter: ['html', 'body', 'span', 'div'],
+            replacement: (innerHTML) ->
+                return innerHTML
+        }
+
+        html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
+
+        html = @.replaceImgsByEmojiName(html)
+
+        makdown = toMarkdown(html, {
+            gfm: true,
+            converters: [converter]
+        })
+
+        return makdown
+
+    getHTML: (text) ->
+        return "" if !text || !text.length
+
+        converter = new showdown.Converter({ extensions: ['newline'] })
+        converter.setOption("strikethrough", true)
+
+        text = @.replaceEmojiNameByImgs(text)
+
+        html = converter.makeHtml(text)
+
+        html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
+        html = html.replace("<em>", "<i>").replace("</em>", "</i>")
+
+        return html
+
+module.service("tgWysiwigService", WysiwigService)
+
+
+Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService) ->
     link = ($scope, $el, $attrs) ->
         mediumInstance = null
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
 
-        emojis = []
         languages = []
 
         isEditOnly = !!$attrs.$attr.editonly
@@ -86,11 +165,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         $scope.mode = $storage.get('editor-mode', 'html')
 
-        $.getJSON("/#{window._version}/emojis/emojis-data.json").then (listEmojis) ->
-            emojis = _.map listEmojis, (it) ->
-                it.image = "/#{window._version}/emojis/" + it.image
-
-                return it
+        wysiwigService.loadEmojis()
 
         $.getJSON("/#{window._version}/prism/prism-languages.json").then (languages) ->
             languages = _.map languages, (it) ->
@@ -98,51 +173,13 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
                 return it
 
-        getEmojiById = (id) ->
-            return _.find emojis, (it) -> it.id == id
-
-        getEmojiByName = (name) ->
-            return _.find emojis, (it) -> it.name == name
-
-        replaceEmojiNameByImgs = (text) ->
-            emojiIds = getMatches(text, /:([^: ]*):/g)
-
-            for emojiId in emojiIds
-                regexImgs = new RegExp(':' + emojiId + ':', 'g')
-                emoji = getEmojiByName(emojiId)
-
-                if emoji
-                    text = text.replace(regexImgs, '![alt](' + emoji.image + ')')
-
-            return text
-
-        replaceImgsByEmojiName = (html) ->
-            emojiIds = getMatches(html, /emojis\/([^"]+).png"/gi)
-
-            for emojiId in emojiIds
-                regexImgs = new RegExp('<img(.*)' + emojiId + '[^>]+\>', 'g')
-                emoji = getEmojiById(emojiId)
-                html = html.replace(regexImgs, ':' + emoji.name + ':')
-
-            return html
-
-        getMatches = (string, regex, index) ->
-            index || (index = 1)
-            matches = []
-            match = null
-
-            while match = regex.exec(string)
-                matches.push(match[index])
-
-            return matches
-
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
 
             if mode == 'markdown'
-                 $scope.markdown = getMarkdown(editorMedium.html())
+                 $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
             else
-                html = getHTML($scope.markdown)
+                html = wysiwigService.getHTML($scope.markdown)
                 editorMedium.html(html)
 
             $scope.mode = mode
@@ -150,7 +187,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         $scope.save = () ->
             if $scope.mode == 'html'
-                $scope.markdown = getMarkdown(editorMedium.html())
+                $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
 
             return if $scope.required && !$scope.markdown.length
 
@@ -168,7 +205,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             if notPersist
                 clean()
             else if $scope.mode == 'html'
-                html = getHTML($scope.content)
+                html = wysiwigService.getHTML($scope.content)
                 editorMedium.html(html)
             else
                 $scope.markdown = $scope.content
@@ -204,25 +241,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
                 name = $('<div/>').text(name).html()
                 mediumInstance.pasteHTML("<a target='_blank' href='" + url + "'>" + name + "</a><br/>")
 
-        getMarkdown = (html) ->
-            # https://github.com/yabwe/medium-editor/issues/543
-            converter = {
-                filter: ['html', 'body', 'span', 'div'],
-                replacement: (innerHTML) ->
-                    return innerHTML
-            }
-
-            html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
-
-            html = replaceImgsByEmojiName(html)
-
-            makdown = toMarkdown(html, {
-                gfm: true,
-                converters: [converter]
-            })
-
-            return makdown
-
         isOutdated = () ->
             store = $storage.get($scope.storageKey)
 
@@ -250,22 +268,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         discardLocalStorage = () ->
             $storage.remove($scope.storageKey)
 
-        getHTML = (text) ->
-            return "" if !text || !text.length
-
-            converter = new showdown.Converter({ extensions: ['newline'] })
-            converter.setOption("strikethrough", true)
-
-            text = replaceEmojiNameByImgs(text)
-
-            html = converter.makeHtml(text)
-            console.log html
-
-            html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
-            html = html.replace("<em>", "<i>").replace("</em>", "</i>")
-
-            return html
-
         cancelWithConfirmation = () ->
             title = $translate.instant("COMMON.CONFIRM_CLOSE_EDIT_MODE_TITLE")
             message = $translate.instant("COMMON.CONFIRM_CLOSE_EDIT_MODE_MESSAGE")
@@ -283,7 +285,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         change = () ->
             if $scope.mode == 'html'
-                $scope.markdown = getMarkdown(editorMedium.html())
+                $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
 
             localSave($scope.markdown)
 
@@ -292,8 +294,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
         cancelablePromise = null
 
         searchEmoji = (name, cb) ->
-            filteredEmojis = _.filter emojis, (it) -> it.name.indexOf(name) != -1
-
+            filteredEmojis = wysiwigService.searchEmojiByName(name)
             filteredEmojis = filteredEmojis.slice(0, 10)
 
             cb(filteredEmojis)
@@ -364,7 +365,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
 
         create = (text, editMode=false) ->
             if text.length
-                html = getHTML(text)
+                html = wysiwigService.getHTML(text)
                 editorMedium.html(html)
 
             mediumInstance = new MediumEditor(editorMedium[0], {
@@ -412,9 +413,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, $timeou
             enableHighlighter = () ->
 
             mediumInstance.subscribe 'editableInput', (e) ->
-                # $('pre').each (i, block) ->
-                #     hljs.highlightBlock(block)
-
                 $scope.$applyAsync(throttleChange)
 
             mediumInstance.subscribe "editableClick", (e) ->
@@ -499,6 +497,6 @@ module.directive("tgMedium", [
     "$tgResources",
     "tgProjectService",
     "$tgNavUrls",
-    "$timeout",
+    "tgWysiwigService",
     Medium
 ])
