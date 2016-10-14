@@ -126,14 +126,12 @@ sass -v             # should return Sass 3.3.8 (Maptastic Maple)
 
 Complete process for all OS at: http://sass-lang.com/install
 
-**Node + Bower + Gulp**
+**Node + Gulp**
 
 We recommend using [nvm](https://github.com/creationix/nvm) to manage different node versions
 ```
 npm install -g gulp
-npm install -g bower
 npm install
-bower install
 gulp
 ```
 

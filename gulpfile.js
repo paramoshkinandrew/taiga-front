@@ -52,7 +52,6 @@ paths.dist = "dist/";
 paths.distVersion = paths.dist + version + "/";
 paths.tmp = "tmp/";
 paths.extras = "extras/";
-paths.vendor = "vendor/";
 paths.modules = "node_modules/";
 
 paths.jade = [
@@ -69,8 +68,8 @@ paths.htmlPartials = [
 paths.images = paths.app + "images/**/*";
 paths.svg = paths.app + "svg/**/*";
 paths.css_vendor = [
-    paths.vendor + "intro.js/introjs.css",
-    paths.vendor + "dragula.js/dist/dragula.css",
+    paths.modules + "intro.js/introjs.css",
+    paths.modules + "dragula.js/dist/dragula.css",
     paths.modules + "awesomplete/awesomplete.css",
     paths.app + "styles/vendor/*.css",
     paths.modules + "medium-editor/dist/css/medium-editor.css",
@@ -153,42 +152,40 @@ paths.coffee_order = [
 ];
 
 paths.libs = [
-    paths.vendor + "bluebird/js/browser/bluebird.js",
-    paths.vendor + "jquery/dist/jquery.js",
-    paths.vendor + "lodash/lodash.js",
-    paths.vendor + "emoticons/lib/emoticons.js",
-    paths.vendor + "messageformat/messageformat.js",
-    paths.vendor + "angular/angular.js",
-    paths.vendor + "angular-route/angular-route.js",
-    paths.vendor + "angular-sanitize/angular-sanitize.js",
-    paths.vendor + "angular-animate/angular-animate.js",
-    paths.vendor + "angular-aria/angular-aria.js",
-    paths.vendor + "angular-translate/angular-translate.js",
-    paths.vendor + "angular-translate-loader-partial/angular-translate-loader-partial.js",
-    paths.vendor + "angular-translate-loader-static-files/angular-translate-loader-static-files.js",
-    paths.vendor + "angular-translate-interpolation-messageformat/angular-translate-interpolation-messageformat.js",
-    paths.vendor + "moment/moment.js",
-    paths.vendor + "checksley/checksley.js",
-    paths.vendor + "pikaday/pikaday.js",
-    paths.vendor + "jquery-flot/jquery.flot.js",
-    paths.vendor + "jquery-flot/jquery.flot.pie.js",
-    paths.vendor + "jquery-flot/jquery.flot.time.js",
-    paths.vendor + "flot-axislabels/jquery.flot.axislabels.js",
-    paths.vendor + "flot.tooltip/js/jquery.flot.tooltip.js",
-    paths.vendor + "raven-js/dist/raven.js",
-    paths.vendor + "l.js/l.js",
-    paths.vendor + "messageformat/locale/*.js",
-    paths.vendor + "ngInfiniteScroll/build/ng-infinite-scroll.js",
-    paths.vendor + "immutable/dist/immutable.js",
-    paths.vendor + "intro.js/intro.js",
-    paths.vendor + "dragula.js/dist/dragula.js",
+    paths.modules + "bluebird/js/browser/bluebird.js",
+    paths.modules + "jquery/dist/jquery.js",
+    paths.modules + "lodash/lodash.js",
+    paths.modules + "messageformat/messageformat.js",
+    paths.modules + "angular/angular.js",
+    paths.modules + "angular-route/angular-route.js",
+    paths.modules + "angular-sanitize/angular-sanitize.js",
+    paths.modules + "angular-animate/angular-animate.js",
+    paths.modules + "angular-aria/angular-aria.js",
+    paths.modules + "angular-translate/dist/angular-translate.js",
+    paths.modules + "angular-translate-loader-partial/angular-translate-loader-partial.js",
+    paths.modules + "angular-translate-loader-static-files/angular-translate-loader-static-files.js",
+    paths.modules + "angular-translate-interpolation-messageformat/angular-translate-interpolation-messageformat.js",
+    paths.modules + "moment/moment.js",
+    paths.modules + "checksley/checksley.js",
+    paths.modules + "pikaday/pikaday.js",
+    paths.modules + "Flot/jquery.flot.js",
+    paths.modules + "Flot/jquery.flot.pie.js",
+    paths.modules + "Flot/jquery.flot.time.js",
+    paths.modules + "flot-axislabels/jquery.flot.axislabels.js",
+    paths.modules + "jquery.flot.tooltip/js/jquery.flot.tooltip.js",
+    paths.modules + "raven-js/dist/raven.js",
+    paths.modules + "l.js/l.js",
+    paths.modules + "ng-infinite-scroll/build/ng-infinite-scroll.js",
+    paths.modules + "immutable/dist/immutable.js",
+    paths.modules + "intro.js/intro.js",
+    paths.modules + "dragula/dist/dragula.js",
     paths.modules + "awesomplete/awesomplete.js",
     paths.modules + "medium-editor/dist/js/medium-editor.js",
     paths.modules + "to-markdown/dist/to-markdown.js",
     paths.modules + "showdown/dist/showdown.js",
     paths.modules + "highlight.js/lib/highlight.js",
     paths.modules + "prismjs/prism.js",
-    paths.vendor + "medium-editor-autolist/dist/autolist.js",
+    paths.modules + "medium-editor-autolist/dist/autolist.js",
     paths.app + "js/dom-autoscroller.js",
     paths.app + "js/dragula-drag-multiple.js",
     paths.app + "js/tg-repeat.js",
@@ -196,6 +193,16 @@ paths.libs = [
     paths.app + "js/murmurhash3_gc.js",
     paths.app + "js/medium-mention.js"
 ];
+
+paths.libs.forEach(function(file) {
+    try {
+        // Query the entry
+        stats = fs.lstatSync(file);
+    }
+    catch (e) {
+        console.log(file);
+    }
+});
 
 var isDeploy = argv["_"].indexOf("deploy") !== -1;
 
@@ -538,7 +545,7 @@ gulp.task("coffee", function() {
 });
 
 gulp.task("moment-locales", function() {
-    return gulp.src(paths.vendor + "moment/locale/*")
+    return gulp.src(paths.modules + "moment/locale/*")
         .pipe(gulpif(isDeploy, uglify()))
         .pipe(gulp.dest(paths.distVersion + "locales/moment-locales/"));
 });
