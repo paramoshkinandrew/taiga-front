@@ -60,14 +60,15 @@ CodeButton = MediumEditor.Extension.extend({
     handleClick: (event) ->
         range = MediumEditor.selection.getSelectionRange(self.document)
 
-        pre = document.createElement('pre');
-        code = document.createElement('code');
+        if range.endContainer.parentNode.tagName != 'CODE'
+            pre = document.createElement('pre');
+            code = document.createElement('code');
 
-        pre.appendChild(code)
-        code.appendChild(range.extractContents())
-        range.insertNode(pre)
+            pre.appendChild(code)
+            code.appendChild(range.extractContents())
+            range.insertNode(pre)
 
-        this.base.checkContentChanged()
+            this.base.checkContentChanged()
 })
 
 class WysiwigService
