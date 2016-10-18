@@ -217,3 +217,28 @@ tg-medium {
         font-weight: bold;
     }
 }
+
+.code-language-selector {
+    @include font-size(xsmall);
+    background-color: $white;
+    border: 1px solid $gray-light;
+    cursor: pointer;
+    padding: .2rem .5rem 0;
+    position: absolute;
+}
+
+.code-language-search {
+    @include font-size(xsmall);
+    background-color: $white;
+    border: 1px solid $gray-light;
+    position: absolute;
+    ul {
+        cursor: pointer;
+        margin-bottom: 0;
+        max-height: 20vh;
+        overflow-y: scroll;
+    }
+    li {
+        padding: .2rem .5rem;
+    }
+}

@@ -27,6 +27,9 @@ bindOnce = @.taiga.bindOnce
 
 module = angular.module("taigaCommon")
 
+lans = "markup,css,clike,javascript,abap,actionscript,ada,apacheconf,apl,applescript,asciidoc,aspnet,autoit,autohotkey,bash,basic,batch,bison,brainfuck,bro,c,csharp,cpp,coffeescript,crystal,css-extras,d,dart,diff,docker,eiffel,elixir,erlang,fsharp,fortran,gherkin,git,glsl,go,graphql,groovy,haml,handlebars,haskell,haxe,http,icon,inform7,ini,j,jade,java,json,julia,keyman,kotlin,latex,less,livescript,lolcode,lua,makefile,markdown,matlab,mel,mizar,monkey,nasm,nginx,nim,nix,nsis,objectivec,ocaml,oz,parigp,parser,pascal,perl,php,php-extras,powershell,processing,prolog,properties,protobuf,puppet,pure,python,q,qore,r,jsx,rest,rip,roboconf,ruby,rust,sas,sass,scss,scala,scheme,smalltalk,smarty,sql,stylus,swift,tcl,textile,twig,typescript,verilog,vhdl,vim,wiki,xojo,yaml"
+lans = lans.split(",")
+
 # showdown extension
 # -> input markdown
 # a
@@ -69,7 +72,96 @@ CodeButton = MediumEditor.Extension.extend({
             range.insertNode(pre)
 
             this.base.checkContentChanged()
+
+        addCodeLanguageSelectors()
 })
+
+removeCodeLanguageSelectors = (mediumInstance) ->
+    return
+    $(mediumInstance.elements[0]).find('code').each (index, code) ->
+        tab = $(code)
+            .removeClass('has-code-language-selector')
+            .data('tab')
+
+        $(tab).remove()
+
+getCodeLanHTML = (filter = '') ->
+    template = _.template("""
+    <% _.forEach(lans, function(lan) { %>
+      <li><%- lan %></li><% });
+    %>
+    """);
+
+    filteresLans = lans
+
+    if filter.length
+        filteresLans = _.filter filteresLans, (it) ->
+            return it.indexOf(filter) != -1
+
+    return template({ 'lans': filteresLans });
+
+searchLanguage = (tab, cb) ->
+    search = document.createElement('div')
+
+    search.className = 'code-language-search'
+
+    preRects = tab.getBoundingClientRect()
+    search.style.top = (preRects.top + $(window).scrollTop() + preRects.height) + 'px'
+    search.style.left = preRects.left + 'px'
+
+    input = document.createElement('input')
+    input.setAttribute('type', 'text')
+
+    ul = document.createElement('ul')
+
+    ul.innerHTML = getCodeLanHTML()
+
+    search.appendChild(input)
+    search.appendChild(ul)
+
+    document.body.appendChild(search)
+
+    input.focus()
+
+    input.addEventListener 'keyup', (e) ->
+        filter = e.currentTarget.value
+
+        ul.innerHTML = getCodeLanHTML(filter)
+
+    $(ul).on "click", "li", (e) ->
+        cb(e.currentTarget.innerText)
+        search.remove()
+
+positionCodeTab = (node, tab) ->
+    preRects = node.getBoundingClientRect()
+
+    tab.style.top = (preRects.top + $(window).scrollTop()) + 'px'
+    tab.style.left = (preRects.left + preRects.width - tab.offsetWidth) + 'px'
+
+addCodeLanguageSelectors = (mediumInstance) ->
+    $('code').each (index, code) ->
+        if !$(code).hasClass('has-code-language-selector')
+            $(code).addClass('has-code-language-selector')
+
+            preRects = code.parentElement.getBoundingClientRect()
+
+            text = document.createTextNode('text')
+
+            tab = document.createElement('div')
+            tab.appendChild(text)
+            tab.addEventListener 'click', () ->
+                searchLanguage tab, (lan) ->
+                    tab.innerText = lan
+                    positionCodeTab(code.parentElement, tab)
+                    code.className = 'has-code-language-selector language-' + lan + ' ' + lan
+
+            document.body.appendChild(tab)
+
+            $(code).data('tab', tab)
+
+            tab.className = 'code-language-selector'
+
+            positionCodeTab(code.parentElement, tab)
 
 class WysiwigService
     searchEmojiByName: (name) ->
@@ -114,11 +206,25 @@ class WysiwigService
 
     getMarkdown: (html) ->
         # https://github.com/yabwe/medium-editor/issues/543
-        converter = {
+        cleanIssueConverter = {
             filter: ['html', 'body', 'span', 'div'],
             replacement: (innerHTML) ->
                 return innerHTML
         }
+
+        codeLanguageConverter = {
+            filter:  (node) ->
+                return node.nodeName == 'PRE' &&
+                  node.firstChild &&
+                  node.firstChild.nodeName == 'CODE'
+            replacement: (content, node) ->
+                lan = _.find node.firstChild.classList, (className) ->
+                     return lans.indexOf(className) != -1
+
+                lan = '' if !lan
+
+                return '\n\n```' + lan + '\n' + node.firstChild.textContent + '\n```\n\n'
+         }
 
         html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
 
@@ -126,8 +232,10 @@ class WysiwigService
 
         makdown = toMarkdown(html, {
             gfm: true,
-            converters: [converter]
+            converters: [cleanIssueConverter, codeLanguageConverter]
         })
+
+        console.log makdown
 
         return makdown
 
@@ -409,10 +517,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.changeMarkdown = throttleChange
 
-            disableHighlighter = () ->
-
-            enableHighlighter = () ->
-
             mediumInstance.subscribe 'editableInput', (e) ->
                 $scope.$applyAsync(throttleChange)
 
@@ -424,6 +528,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             mediumInstance.subscribe 'focus', (event) ->
                 $scope.$applyAsync () -> $scope.editMode = true
+                addCodeLanguageSelectors()
 
             mediumInstance.subscribe 'editableDrop', (event) ->
                 $scope.onUploadFile({files: event.dataTransfer.files, cb: uploadEnd})
@@ -447,6 +552,10 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.editMode = editMode
 
+        # $scope.$watch 'editMode', (editMode) ->
+        #     if editMode
+        #         addCodeLanguageSelectors(mediumInstance)
+
         $scope.$watch 'content', (content) ->
             if !_.isUndefined(content)
                 $scope.outdated = isOutdated()
@@ -465,12 +574,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                     mediumInstance.destroy()
 
                 create(content, $scope.editMode)
-
-        $scope.$on "editMode", (editMode) ->
-            if editMode
-                disableHighlighter()
-            else
-                enableHighlighter()
 
         $scope.$on "$destroy", () ->
             if mediumInstance
