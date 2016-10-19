@@ -618,7 +618,7 @@ gulp.task("copy-emojis", function() {
         .pipe(gulp.dest(paths.distVersion + "/emojis/"));
 });
 
-gulp.task("copy-prism", function() {
+gulp.task("copy-prism", ["prism-languages"], function() {
     var prismLanguages = require(__dirname + '/prism-languages.json');
 
     prismLanguages = prismLanguages.map(function(it) {
@@ -687,6 +687,7 @@ gulp.task("express", function() {
     app.use("/" + version + "/fonts", express.static(__dirname + "/dist/" + version + "/fonts"));
     app.use("/" + version + "/locales", express.static(__dirname + "/dist/" + version + "/locales"));
     app.use("/" + version + "/maps", express.static(__dirname + "/dist/" + version + "/maps"));
+    app.use("/" + version + "/prism", express.static(__dirname + "/dist/" + version + "/prism"));
     app.use("/plugins", express.static(__dirname + "/dist/plugins"));
     app.use("/conf.json", express.static(__dirname + "/dist/conf.json"));
     app.use(require('connect-livereload')({
