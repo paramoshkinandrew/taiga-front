@@ -47,6 +47,9 @@
     ul {
         list-style-type: disc;
     }
+    li.list-stye-none {
+        list-style: none;
+    }
     b {
         font-weight: bold;
     }
@@ -199,7 +202,10 @@ tg-medium {
         }
     }
     .markdown:not(.empty) {
-        white-space: pre-wrap;
+        p {
+            white-space: pre-wrap;
+            margin-bottom: 0;
+        }
     }
     .read-mode {
         cursor: pointer;

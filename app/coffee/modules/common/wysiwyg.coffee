@@ -29,29 +29,6 @@ module = angular.module("taigaCommon")
 
 languages = []
 
-# showdown extension
-# -> input markdown
-# a
-# b
-# c
-# -> output html
-# <p>a</br>
-# b</br>
-# c</p>
-showdown.extension 'newline', () ->
-    return [{
-        type: 'lang',
-        filter: (text) ->
-            return text
-        #   return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e, xx) ->
-        #       console.log 11111111111111111111
-        #       console.log e
-        #       console.log text
-        #       console.log xx
-        #       console.log 22222222222222222222
-        #       return e + "  \n"
-    }]
-
 # MediumEditor extension to add <code>
 CodeButton = MediumEditor.Extension.extend({
     name: 'code',
@@ -262,8 +239,9 @@ class WysiwigService
                 return '\n\n```' + lan + '\n' + node.firstChild.textContent + '\n```\n\n'
          }
 
-        html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
+        console.log "html to markdown ----------------"
 
+        html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
         html = @.replaceImgsByEmojiName(html)
 
         markdown = toMarkdown(html, {
@@ -271,29 +249,38 @@ class WysiwigService
             converters: [cleanIssueConverter, codeLanguageConverter]
         })
 
+        console.log markdown
+
         return markdown
 
     getHTML: (text) ->
         return "" if !text || !text.length
 
-        console.log text
+        text = @.replaceEmojiNameByImgs(text)
 
-        converter = new showdown.Converter({ extensions: ['newline'] })
-        html = converter.makeHtml(text)
+        md = window.markdownit()
+        result = md.render(text)
 
-        # converter = new showdown.Converter({ extensions: ['newline'] })
+        return result
+
+        # mentions with @ or issue/32
+        # converter = new showdown.Converter()
+        #
         # converter.setOption("strikethrough", true)
+        # converter.setOption("tables", true)
+        # converter.setOption("ghCodeBlocks", true)
+        # converter.setOption("tasklists", true)
         #
         # text = @.replaceEmojiNameByImgs(text)
-        #
+        # console.log "markdown to html ----------------"
+        # console.log text
         # html = converter.makeHtml(text)
+        # console.log html
         #
         # html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
         # html = html.replace("<em>", "<i>").replace("</em>", "</i>")
-
-        console.log html
-
-        return html
+        #
+        # return html
 
 module.service("tgWysiwigService", WysiwigService)
 
@@ -322,12 +309,18 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
                     return it
 
+        preLoadHtml = () ->
+            editorMedium.find('li:has(input)').addClass('list-stye-none')
+
+            if !$scope.editMode
+                addHightlighter(mediumInstance)
+
         setHtmlMedium = (markdown) ->
             html = wysiwigService.getHTML(markdown)
             editorMedium.html(html)
 
-            if !$scope.editMode
-                addHightlighter(mediumInstance)
+            preLoadHtml()
+
 
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
@@ -576,7 +569,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             mediumInstance.subscribe 'focus', (event) ->
                 $scope.$applyAsync () -> $scope.editMode = true
-                #addCodeLanguageSelectors()
 
             mediumInstance.subscribe 'editableDrop', (event) ->
                 $scope.onUploadFile({files: event.dataTransfer.files, cb: uploadEnd})
@@ -600,7 +592,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.editMode = editMode
 
-            addHightlighter(mediumInstance)
+            preLoadHtml()
 
         $scope.$watch 'editMode', (editMode) ->
             if editMode

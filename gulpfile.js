@@ -183,6 +183,7 @@ paths.libs = [
     paths.modules + "medium-editor/dist/js/medium-editor.js",
     paths.modules + "to-markdown/dist/to-markdown.js",
     paths.modules + "showdown/dist/showdown.js",
+    paths.modules + "markdown-it/dist/markdown-it.js",
     paths.modules + "highlight.js/lib/highlight.js",
     paths.modules + "prismjs/prism.js",
     paths.modules + "medium-editor-autolist/dist/autolist.js",
