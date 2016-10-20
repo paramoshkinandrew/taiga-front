@@ -40,10 +40,16 @@ languages = []
 # c</p>
 showdown.extension 'newline', () ->
     return [{
-      type: 'lang',
-      filter: (text) ->
-          return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e) ->
-              return e.trim() + "  \n"
+        type: 'lang',
+        filter: (text) ->
+            return text
+        #   return text.replace /^( *(\d+\.  {1,4}|[\w\<\'\">\-*+])[^\n]*)\n{1}(?!\n| *\d+\. {1,4}| *[-*+] +|#|$)/gm, (e, xx) ->
+        #       console.log 11111111111111111111
+        #       console.log e
+        #       console.log text
+        #       console.log xx
+        #       console.log 22222222222222222222
+        #       return e + "  \n"
     }]
 
 # MediumEditor extension to add <code>
@@ -174,38 +180,26 @@ getLanguageByClassList = (classes) ->
     return _.find classes, (className) ->
         return !!_.find languages, (it) -> it.name == className
 
+removeHightlighter = (mediumInstance) ->
+    codes = $(mediumInstance.elements[0]).find('code')
+
+    codes.each (index, code) ->
+        code.innerHTML = $(code).data('html')
+
+
 addHightlighter = (mediumInstance) ->
     codes = $(mediumInstance.elements[0]).find('code')
 
     codes.each (index, code) ->
-        console.log code
+        $(code).data('html', code.innerHTML)
+
         lan = getLanguageByClassList(code.classList)
 
         if !Prism.languages[lan]
             ljs.load "/#{window._version}/prism/prism-#{lan}.min.js", () ->
                 Prism.highlightElement(code)
-                # html = Prism.highlight(code.innerHTML, Prism.languages[lan])
-                #
-                # console.log code.innerHTML
-                # console.log html
-                # code.innerHTML = html
-
-    # console.log mediumInstance
-    # lan = _.find $(mediumInstance.elements[0]).find('code').classList, (className) ->
-    #      return languages.indexOf(className) != -1
-    #
-    # lan = null if !lan
-    #
-    # console.log lan
-    #
-    #
-    # html = Prism.highlight("var hola = 2", Prism.languages.javascript);
-    # console.log html
-    # $.getJSON("/#{window._version}/prism/prism-languages.json").then (_languages_) ->
-    #     languages = _.map _languages_, (it) ->
-    #         languages.url = "/#{window._version}/prism/" + it.file
-    #
-    #         return it
+        else
+            Prism.highlightElement(code)
 
 class WysiwigService
     searchEmojiByName: (name) ->
@@ -272,29 +266,32 @@ class WysiwigService
 
         html = @.replaceImgsByEmojiName(html)
 
-        makdown = toMarkdown(html, {
+        markdown = toMarkdown(html, {
             gfm: true,
             converters: [cleanIssueConverter, codeLanguageConverter]
         })
 
-        return makdown
+        return markdown
 
     getHTML: (text) ->
         return "" if !text || !text.length
 
-        #console.log text
+        console.log text
 
         converter = new showdown.Converter({ extensions: ['newline'] })
-        converter.setOption("strikethrough", true)
-
-        text = @.replaceEmojiNameByImgs(text)
-
         html = converter.makeHtml(text)
 
-        html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
-        html = html.replace("<em>", "<i>").replace("</em>", "</i>")
+        # converter = new showdown.Converter({ extensions: ['newline'] })
+        # converter.setOption("strikethrough", true)
+        #
+        # text = @.replaceEmojiNameByImgs(text)
+        #
+        # html = converter.makeHtml(text)
+        #
+        # html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
+        # html = html.replace("<em>", "<i>").replace("</em>", "</i>")
 
-        #console.log html
+        console.log html
 
         return html
 
@@ -306,8 +303,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
         mediumInstance = null
         editorMedium = $el.find('.medium')
         editorMarkdown = $el.find('.markdown')
-
-
 
         isEditOnly = !!$attrs.$attr.editonly
         notPersist = !!$attrs.$attr.notPersist
@@ -327,14 +322,20 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
                     return it
 
+        setHtmlMedium = (markdown) ->
+            html = wysiwigService.getHTML(markdown)
+            editorMedium.html(html)
+
+            if !$scope.editMode
+                addHightlighter(mediumInstance)
+
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
 
             if mode == 'markdown'
                  $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
             else
-                html = wysiwigService.getHTML($scope.markdown)
-                editorMedium.html(html)
+                setHtmlMedium($scope.markdown)
 
             $scope.mode = mode
             mediumInstance.trigger('editableBlur', {}, editorMedium[0])
@@ -359,8 +360,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             if notPersist
                 clean()
             else if $scope.mode == 'html'
-                html = wysiwigService.getHTML($scope.content)
-                editorMedium.html(html)
+                setHtmlMedium($scope.content)
             else
                 $scope.markdown = $scope.content
 
@@ -384,6 +384,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             if notPersist
                 clean()
+
+            if $scope.mode == 'html'
+                addHightlighter(mediumInstance)
 
             discardLocalStorage()
             mediumInstance.trigger('blur', {}, editorMedium[0])
@@ -602,6 +605,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
         $scope.$watch 'editMode', (editMode) ->
             if editMode
                 addCodeLanguageSelectors(mediumInstance)
+                removeHightlighter(mediumInstance)
             else
                 removeCodeLanguageSelectors(mediumInstance)
 

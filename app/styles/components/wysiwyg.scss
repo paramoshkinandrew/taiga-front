@@ -199,7 +199,7 @@ tg-medium {
         }
     }
     .markdown:not(.empty) {
-        white-space: pre-line;
+        white-space: pre-wrap;
     }
     .read-mode {
         cursor: pointer;
