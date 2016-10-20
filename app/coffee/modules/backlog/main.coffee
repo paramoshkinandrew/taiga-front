@@ -206,6 +206,7 @@ class BacklogController extends mixOf(taiga.Controller, taiga.PageMixin, taiga.F
                 @scope.stats.completedPercentage = 0
 
             @scope.showGraphPlaceholder = !(stats.total_points? && stats.total_milestones?)
+            @.calculateForecasting()
             return stats
 
     setMilestonesOrder: (sprints) ->
