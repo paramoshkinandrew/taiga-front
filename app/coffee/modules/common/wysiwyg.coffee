@@ -275,6 +275,8 @@ class WysiwigService
 module.service("tgWysiwigService", WysiwigService)
 
 Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame) ->
+    # bug
+    # <pre><code></code></pre> the enter doesn't work
     oldIsBlockContainer = MediumEditor.util.isBlockContainer
 
     MediumEditor.util.isBlockContainer = (element) ->
