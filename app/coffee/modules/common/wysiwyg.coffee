@@ -30,7 +30,7 @@ module = angular.module("taigaCommon")
 languages = []
 
 # MediumEditor extension to add <code>
-CodeButton = MediumEditor.Extension.extend({
+CodeButton = MediumEditor.extensions.button.extend({
     name: 'code',
     init: () ->
         this.button = this.document.createElement('button')
@@ -41,6 +41,8 @@ CodeButton = MediumEditor.Extension.extend({
 
     getButton: () ->
         return this.button
+
+    tagNames: ['code']
 
     handleClick: (event) ->
         range = MediumEditor.selection.getSelectionRange(self.document)
@@ -57,6 +59,7 @@ CodeButton = MediumEditor.Extension.extend({
 
         addCodeLanguageSelectors(this.base)
 })
+
 
 getCodeLanHTML = (filter = '') ->
     template = _.template("""
@@ -133,9 +136,11 @@ addCodeLanguageSelectors = (mediumInstance) ->
         if !$(code).hasClass('has-code-language-selector')
             $(code).addClass('has-code-language-selector')
 
+            currentLan = getLanguageByClassList(code.classList)
+
             preRects = code.parentElement.getBoundingClientRect()
 
-            text = document.createTextNode('text')
+            text = document.createTextNode(currentLan || 'text')
 
             tab = document.createElement('div')
             tab.appendChild(text)
@@ -154,29 +159,31 @@ addCodeLanguageSelectors = (mediumInstance) ->
             positionCodeTab(code.parentElement, tab)
 
 getLanguageByClassList = (classes) ->
-    return _.find classes, (className) ->
-        return !!_.find languages, (it) -> it.name == className
+    lan = _.find languages, (it) ->
+        return !!_.find classes, (className) ->
+            return 'language-' + it.name == className
+
+
+    return if lan then lan.name else null
 
 removeHightlighter = (mediumInstance) ->
     codes = $(mediumInstance.elements[0]).find('code')
 
     codes.each (index, code) ->
-        code.innerHTML = $(code).data('html')
-
+        code.innerHTML = code.innerText
 
 addHightlighter = (mediumInstance) ->
     codes = $(mediumInstance.elements[0]).find('code')
 
     codes.each (index, code) ->
-        $(code).data('html', code.innerHTML)
-
         lan = getLanguageByClassList(code.classList)
-        console.log "lan ", lan
-        if !Prism.languages[lan]
-            ljs.load "/#{window._version}/prism/prism-#{lan}.min.js", () ->
+
+        if lan
+            if !Prism.languages[lan]
+                ljs.load "/#{window._version}/prism/prism-#{lan}.min.js", () ->
+                    Prism.highlightElement(code)
+            else
                 Prism.highlightElement(code)
-        else
-            Prism.highlightElement(code)
 
 class WysiwigService
     searchEmojiByName: (name) ->
@@ -236,9 +243,8 @@ class WysiwigService
                 lan = getLanguageByClassList(node.firstChild.classList)
                 lan = '' if !lan
 
-                return '\n\n```' + lan + '\n' + node.firstChild.textContent + '\n```\n\n'
+                return '\n\n```' + lan + '\n' + _.trim(node.firstChild.textContent) + '\n```\n\n'
          }
-
 
         html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
         html = @.replaceImgsByEmojiName(html)
@@ -247,7 +253,6 @@ class WysiwigService
             gfm: true,
             converters: [cleanIssueConverter, codeLanguageConverter]
         })
-
 
         return markdown
 
@@ -262,32 +267,22 @@ class WysiwigService
 
         result = md.render(text)
 
+        # console.log text
+        # console.log result
 
         return result
 
-        # mentions with @ or issue/32
-        # converter = new showdown.Converter()
-        #
-        # converter.setOption("strikethrough", true)
-        # converter.setOption("tables", true)
-        # converter.setOption("ghCodeBlocks", true)
-        # converter.setOption("tasklists", true)
-        #
-        # text = @.replaceEmojiNameByImgs(text)
-        # console.log "markdown to html ----------------"
-        # console.log text
-        # html = converter.makeHtml(text)
-        # console.log html
-        #
-        # html = html.replace("<strong>", "<b>").replace("</strong>", "</b>")
-        # html = html.replace("<em>", "<i>").replace("</em>", "</i>")
-        #
-        # return html
-
 module.service("tgWysiwigService", WysiwigService)
 
+Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame) ->
+    oldIsBlockContainer = MediumEditor.util.isBlockContainer
 
-Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService) ->
+    MediumEditor.util.isBlockContainer = (element) ->
+        if element.tagName.toLowerCase() == 'code'
+            return true
+
+        return oldIsBlockContainer(element)
+
     link = ($scope, $el, $attrs) ->
         mediumInstance = null
         editorMedium = $el.find('.medium')
@@ -312,10 +307,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                     return it
 
         preLoadHtml = () ->
-            editorMedium.find('li:has(input)').addClass('list-stye-none')
+            editorMedium.find('li:has(input)').addClass('list-style-none')
 
-            if !$scope.editMode
-                addHightlighter(mediumInstance)
+            refreshExtras()
 
         setHtmlMedium = (markdown) ->
             html = wysiwigService.getHTML(markdown)
@@ -323,17 +317,18 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             preLoadHtml()
 
-
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
 
             if mode == 'markdown'
-                 $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
+                $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
             else
                 setHtmlMedium($scope.markdown)
 
             $scope.mode = mode
             mediumInstance.trigger('editableBlur', {}, editorMedium[0])
+
+            refreshExtras()
 
         $scope.save = () ->
             if $scope.mode == 'html'
@@ -364,12 +359,28 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             $scope.outdated = false
 
             $scope.onCancel()
+            refreshExtras()
 
             return
 
         clean = () ->
             $scope.markdown = ''
             editorMedium.html('')
+
+        refreshExtras = () ->
+            if $scope.mode == 'html'
+                if $scope.editMode
+                    animationFrame.add () ->
+                        addCodeLanguageSelectors(mediumInstance)
+                        removeHightlighter(mediumInstance)
+                else
+                    animationFrame.add () ->
+                        addHightlighter(mediumInstance)
+                        removeCodeLanguageSelectors(mediumInstance)
+            else
+                animationFrame.add () ->
+                    removeHightlighter(mediumInstance)
+                    removeCodeLanguageSelectors(mediumInstance)
 
         saveEnd = () ->
             $scope.saving  = false
@@ -380,11 +391,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             if notPersist
                 clean()
 
-            if $scope.mode == 'html'
-                addHightlighter(mediumInstance)
-
             discardLocalStorage()
             mediumInstance.trigger('blur', {}, editorMedium[0])
+            refreshExtras()
 
         uploadEnd = (name, url) ->
             if taiga.isImage(name)
@@ -540,7 +549,8 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                         'h2',
                         'h3',
                         'quote',
-                        'code'
+                        'code',
+                        'pre'
                     ]
                 },
                 extensions: {
@@ -570,7 +580,10 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                     window.open(e.target.href)
 
             mediumInstance.subscribe 'focus', (event) ->
-                $scope.$applyAsync () -> $scope.editMode = true
+                $scope.$applyAsync () ->
+                    if !$scope.editMode
+                        $scope.editMode = true
+                        refreshExtras()
 
             mediumInstance.subscribe 'editableDrop', (event) ->
                 $scope.onUploadFile({files: event.dataTransfer.files, cb: uploadEnd})
@@ -595,13 +608,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             $scope.editMode = editMode
 
             preLoadHtml()
-
-        $scope.$watch 'editMode', (editMode) ->
-            if editMode
-                addCodeLanguageSelectors(mediumInstance)
-                removeHightlighter(mediumInstance)
-            else
-                removeCodeLanguageSelectors(mediumInstance)
 
         $scope.$watch 'content', (content) ->
             if !_.isUndefined(content)
@@ -649,5 +655,6 @@ module.directive("tgMedium", [
     "tgProjectService",
     "$tgNavUrls",
     "tgWysiwigService",
+    "animationFrame",
     Medium
 ])
