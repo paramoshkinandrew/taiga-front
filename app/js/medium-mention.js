@@ -128,7 +128,7 @@ var MentionExtension = MediumEditor.Extension.extend({
         var target = this.base.getFocusedElement();
 
         this.base.events.updateInput(target, {
-          target,
+          target: target,
           currentTarget: target
         });
 

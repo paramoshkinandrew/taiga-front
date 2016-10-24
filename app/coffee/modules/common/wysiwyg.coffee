@@ -171,7 +171,7 @@ addHightlighter = (mediumInstance) ->
         $(code).data('html', code.innerHTML)
 
         lan = getLanguageByClassList(code.classList)
-
+        console.log "lan ", lan
         if !Prism.languages[lan]
             ljs.load "/#{window._version}/prism/prism-#{lan}.min.js", () ->
                 Prism.highlightElement(code)
@@ -239,7 +239,6 @@ class WysiwigService
                 return '\n\n```' + lan + '\n' + node.firstChild.textContent + '\n```\n\n'
          }
 
-        console.log "html to markdown ----------------"
 
         html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
         html = @.replaceImgsByEmojiName(html)
@@ -249,7 +248,6 @@ class WysiwigService
             converters: [cleanIssueConverter, codeLanguageConverter]
         })
 
-        console.log markdown
 
         return markdown
 
@@ -258,8 +256,12 @@ class WysiwigService
 
         text = @.replaceEmojiNameByImgs(text)
 
-        md = window.markdownit()
+        md = window.markdownit({
+            breaks: true
+        })
+
         result = md.render(text)
+
 
         return result
 

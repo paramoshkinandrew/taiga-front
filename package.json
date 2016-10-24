@@ -124,6 +124,7 @@
     "l.js": "git+ssh://git@github.com/juanfran/l.js.git",
     "lodash": "^4.16.4",
     "markdown-it": "^8.0.1",
+    "markdown-it-task-lists": "^1.4.1",
     "medium-editor": "^5.21.1",
     "medium-editor-autolist": "git+https://github.com/gruberro/medium-editor-autolist.git#add-package-json",
     "medium-editor-tc-mention": "^2.2.4",
