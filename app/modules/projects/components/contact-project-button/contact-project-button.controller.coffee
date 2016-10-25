@@ -23,7 +23,6 @@ class ContactProjectButtonController
     constructor: (@lightboxFactory)->
 
     launchContactForm: () ->
-        console.log @.project
         @lightboxFactory.create(
             'tg-lb-contact-team',
             {

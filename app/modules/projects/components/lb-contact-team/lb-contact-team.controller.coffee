@@ -18,10 +18,25 @@
 ###
 
 class ContactTeamLbController
-    @.$inject = []
+    @.$inject = [
+        "lightboxService",
+        "tgResources",
+        "$tgConfirm",
+    ]
 
-    constructor: ()->
-        console.log @.project
+    constructor: (@lightboxService, @rs, @confirm)->
+        @.contact = {}
 
+    contactTeam: () ->
+        if @.contact.message
+            project = @.project.get('id')
+            message = @.contact.message
+
+            promise = @rs.projects.contactProject(project, message)
+            @.sendingFeedback = true
+            promise.then  =>
+                @lightboxService.closeAll()
+                @.sendingFeedback = false
+                @confirm.notify("success")
 
 angular.module("taigaProjects").controller("ContactTeamLbCtrl", ContactTeamLbController)

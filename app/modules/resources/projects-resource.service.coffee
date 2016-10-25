@@ -108,6 +108,16 @@ Resource = (urlsService, http, paginateResponseService) ->
         url = urlsService.resolve("project-unwatch", projectId)
         return http.post(url)
 
+    service.contactProject = (projectId, message) ->
+        console.log projectId, message
+        params = {
+            project: projectId,
+            comment: message
+        }
+
+        url = urlsService.resolve("project-contact")
+        return http.post(url, params)
+
     service.transferValidateToken = (projectId, token) ->
         data = {
             token: token

@@ -1,4 +1,26 @@
 tg-lightbox-close
 
-.form
-    h2.title(translate="LIGHTBOX.CHANGE_OWNER.TITLE")
+form.lb-contact-team-container
+    img.lightbox-contact-team-logo(
+        ng-if="vm.project.logo_big_url"
+        alt="{{vm.project.get('name')}}"
+        ng-src="vm.project.logo_big_url"
+    )
+    img.lightbox-contact-team-logo(
+        ng-if="!vm.project.logo_big_url"
+        tg-project-logo-big-src="vm.project"
+        alt="{{vm.project.get('name')}}"
+    )
+    h2.lightbox-contact-team-title(translate="LIGHTBOX.CONTACT_TEAM.TITLE")
+    h3.lightbox-contact-team-name {{vm.project.get('name')}}
+    p(translate="LIGHTBOX.CONTACT_TEAM.WARNING")
+    textarea.lightbox-contact-team-message(
+        ng-model="vm.contact.message"
+        required
+        placeholder="{{'LIGHTBOX.CONTACT_TEAM.PLACEHOLDER' | translate}}"
+    )
+    button.button-green.lightbox-contact-team-button(
+        translate="LIGHTBOX.CONTACT_TEAM.SEND"
+        ng-click="vm.contactTeam()"
+        tg-loading="vm.sendingFeedback"
+    )

@@ -25,7 +25,6 @@ ContactTeamLbDirective = (lightboxService) ->
         lightboxService.open(el)
 
     return {
-        scope: {}
         controller: "ContactTeamLbCtrl",
         bindToController: {
             project: '='
