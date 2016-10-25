@@ -16,7 +16,7 @@ section.comments
             on-edit-comment="vm.onEditComment({commentId: commentId, commentData: commentData, callback: callback})"
         )
 
-    tg-comment-medium(
+    tg-comment-wysiwyg(
         tg-check-permission="{{::vm.canAddCommentPermission}}"
         on-update="updateComment(text)"
         type="vm.type"

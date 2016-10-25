@@ -76,12 +76,11 @@ sizeFormat = =>
 module.filter("sizeFormat", sizeFormat)
 
 
-markdownToHTML = ->
+markdownToHTML = (wysiwigService) ->
     return (input) ->
         if input
-            converter = new showdown.Converter()
-            return converter.makeHtml(input)
+            return wysiwigService.getHTML(input)
 
         return ""
 
-module.filter("markdownToHTML", markdownToHTML)
+module.filter("markdownToHTML", ["tgWysiwigService", markdownToHTML])

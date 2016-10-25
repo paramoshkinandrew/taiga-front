@@ -19,269 +19,44 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-# File: modules/common/wysiwyg.coffee
+# File: modules/common/wysiwyg/wysiwyg.coffee
 ###
 
 taiga = @.taiga
 bindOnce = @.taiga.bindOnce
 
-module = angular.module("taigaCommon")
+Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame, tgLoader, wysiwygCodeHightlighterService) ->
+    # MediumEditor extension to add <code>
+    CodeButton = MediumEditor.extensions.button.extend({
+        name: 'code',
+        init: () ->
+            this.button = this.document.createElement('button')
+            this.button.classList.add('medium-editor-action')
+            this.button.innerHTML = '<b>Code</b>'
+            this.button.title = 'Code'
+            this.on(this.button, 'click', this.handleClick.bind(this))
 
-languages = []
+        getButton: () ->
+            return this.button
 
-# MediumEditor extension to add <code>
-CodeButton = MediumEditor.extensions.button.extend({
-    name: 'code',
-    init: () ->
-        this.button = this.document.createElement('button')
-        this.button.classList.add('medium-editor-action')
-        this.button.innerHTML = '<b>Code</b>'
-        this.button.title = 'Code'
-        this.on(this.button, 'click', this.handleClick.bind(this))
+        tagNames: ['code']
 
-    getButton: () ->
-        return this.button
+        handleClick: (event) ->
+            range = MediumEditor.selection.getSelectionRange(self.document)
 
-    tagNames: ['code']
+            if range.endContainer.parentNode.tagName != 'CODE'
+                pre = document.createElement('pre');
+                code = document.createElement('code');
 
-    handleClick: (event) ->
-        range = MediumEditor.selection.getSelectionRange(self.document)
+                pre.appendChild(code)
+                code.appendChild(range.extractContents())
+                range.insertNode(pre)
 
-        if range.endContainer.parentNode.tagName != 'CODE'
-            pre = document.createElement('pre');
-            code = document.createElement('code');
+                this.base.checkContentChanged()
 
-            pre.appendChild(code)
-            code.appendChild(range.extractContents())
-            range.insertNode(pre)
+            wysiwygCodeHightlighterService.addCodeLanguageSelectors(this.base)
+    })
 
-            this.base.checkContentChanged()
-
-        addCodeLanguageSelectors(this.base)
-})
-
-
-getCodeLanHTML = (filter = '') ->
-    template = _.template("""
-    <% _.forEach(lans, function(lan) { %>
-      <li><%- lan %></li><% });
-    %>
-    """);
-
-    filteresLans = _.map languages, (it) -> it.name
-
-    if filter.length
-        filteresLans = _.filter filteresLans, (it) ->
-            return it.indexOf(filter) != -1
-
-    return template({ 'lans': filteresLans });
-
-searchLanguage = (tab, cb) ->
-    search = document.createElement('div')
-
-    search.className = 'code-language-search'
-
-    preRects = tab.getBoundingClientRect()
-    search.style.top = (preRects.top + $(window).scrollTop() + preRects.height) + 'px'
-    search.style.left = preRects.left + 'px'
-
-    input = document.createElement('input')
-    input.setAttribute('type', 'text')
-
-    ul = document.createElement('ul')
-
-    ul.innerHTML = getCodeLanHTML()
-
-    search.appendChild(input)
-    search.appendChild(ul)
-
-    document.body.appendChild(search)
-
-    input.focus()
-
-    close = () ->
-        search.remove()
-        $(document.body).off('.leave-search-codelan')
-
-    $(document.body).on 'mouseup.leave-search-codelan', (e) ->
-        if !$(search).is(e.target)  && $(search).has(e.target).length == 0
-            cb(null)
-            close()
-
-    $(input).on 'keyup', (e) ->
-        filter = e.currentTarget.value
-
-        ul.innerHTML = getCodeLanHTML(filter)
-
-    $(ul).on "click", "li", (e) ->
-        cb(e.currentTarget.innerText)
-        close()
-
-positionCodeTab = (node, tab) ->
-    preRects = node.getBoundingClientRect()
-
-    tab.style.top = (preRects.top + $(window).scrollTop()) + 'px'
-    tab.style.left = (preRects.left + preRects.width - tab.offsetWidth) + 'px'
-
-removeCodeLanguageSelectors = (mediumInstance) ->
-    return if !mediumInstance || !mediumInstance.elements
-
-    $(mediumInstance.elements[0]).find('code').each (index, code) ->
-        $(code).removeClass('has-code-language-selector')
-
-    $('.medium-' + mediumInstance.id).remove()
-
-addCodeLanguageSelectors = (mediumInstance) ->
-    $('code').each (index, code) ->
-        if !code.classList.contains('has-code-language-selector')
-            code.classList.add('has-code-language-selector')
-
-            currentLan = getLanguageByClassList(code.classList)
-
-            preRects = code.parentElement.getBoundingClientRect()
-
-            id = new Date().getTime()
-
-            text = document.createTextNode(currentLan || 'text')
-
-            tab = document.createElement('div')
-            tab.appendChild(text)
-            tab.addEventListener 'click', () ->
-                searchLanguage tab, (lan) ->
-                    if lan
-                        tab.innerText = lan
-                        positionCodeTab(code.parentElement, tab)
-                        code.classList.add('language-' + lan)
-                        code.classList.add(lan)
-
-            document.body.appendChild(tab)
-
-            code.classList.add(id)
-            code.dataset.tab = tab
-
-            tab.classList.add('code-language-selector')
-            tab.classList.add('medium-' + mediumInstance.id)
-            tab.dataset.tabId = id
-
-            positionCodeTab(code.parentElement, tab)
-
-getLanguageByClassList = (classes) ->
-    lan = _.find languages, (it) ->
-        return !!_.find classes, (className) ->
-            return 'language-' + it.name == className
-
-
-    return if lan then lan.name else null
-
-removeHightlighter = (mediumInstance) ->
-    codes = $(mediumInstance.elements[0]).find('code')
-
-    codes.each (index, code) ->
-        code.innerHTML = code.innerText
-
-addHightlighter = (mediumInstance) ->
-    codes = $(mediumInstance.elements[0]).find('code')
-
-    codes.each (index, code) ->
-        lan = getLanguageByClassList(code.classList)
-
-        if lan
-            if !Prism.languages[lan]
-                ljs.load "/#{window._version}/prism/prism-#{lan}.min.js", () ->
-                    Prism.highlightElement(code)
-            else
-                Prism.highlightElement(code)
-
-class WysiwigService
-    searchEmojiByName: (name) ->
-        return _.filter @.emojis, (it) -> it.name.indexOf(name) != -1
-
-    setEmojiImagePath: (emojis) ->
-        @.emojis = _.map emojis, (it) ->
-            it.image = "/#{window._version}/emojis/" + it.image
-
-            return it
-
-    loadEmojis: () ->
-        $.getJSON("/#{window._version}/emojis/emojis-data.json").then(@.setEmojiImagePath.bind(this))
-
-    getEmojiById: (id) ->
-        return _.find  @.emojis, (it) -> it.id == id
-
-    getEmojiByName: (name) ->
-        return _.find @.emojis, (it) -> it.name == name
-
-    replaceImgsByEmojiName: (html) ->
-        emojiIds = taiga.getMatches(html, /emojis\/([^"]+).png"/gi)
-
-        for emojiId in emojiIds
-            regexImgs = new RegExp('<img(.*)' + emojiId + '[^>]+\>', 'g')
-            emoji = @.getEmojiById(emojiId)
-            html = html.replace(regexImgs, ':' + emoji.name + ':')
-
-        return html
-
-    replaceEmojiNameByImgs: (text) ->
-        emojiIds = taiga.getMatches(text, /:([^: ]*):/g)
-
-        for emojiId in emojiIds
-            regexImgs = new RegExp(':' + emojiId + ':', 'g')
-            emoji = @.getEmojiByName(emojiId)
-
-            if emoji
-                text = text.replace(regexImgs, '![alt](' + emoji.image + ')')
-
-        return text
-
-    getMarkdown: (html) ->
-        # https://github.com/yabwe/medium-editor/issues/543
-        cleanIssueConverter = {
-            filter: ['html', 'body', 'span', 'div'],
-            replacement: (innerHTML) ->
-                return innerHTML
-        }
-
-        codeLanguageConverter = {
-            filter:  (node) ->
-                return node.nodeName == 'PRE' &&
-                  node.firstChild &&
-                  node.firstChild.nodeName == 'CODE'
-            replacement: (content, node) ->
-                lan = getLanguageByClassList(node.firstChild.classList)
-                lan = '' if !lan
-
-                return '\n\n```' + lan + '\n' + _.trim(node.firstChild.textContent) + '\n```\n\n'
-         }
-
-        html = html.replace(/&nbsp;(<\/.*>)/g, "$1")
-        html = @.replaceImgsByEmojiName(html)
-
-        markdown = toMarkdown(html, {
-            gfm: true,
-            converters: [cleanIssueConverter, codeLanguageConverter]
-        })
-
-        return markdown
-
-    getHTML: (text) ->
-        return "" if !text || !text.length
-
-        text = @.replaceEmojiNameByImgs(text)
-
-        md = window.markdownit({
-            breaks: true
-        })
-
-        result = md.render(text)
-
-        # console.log text
-        # console.log result
-
-        return result
-
-module.service("tgWysiwigService", WysiwigService)
-
-Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame, tgLoader) ->
     # bug
     # <pre><code></code></pre> the enter doesn't work
     oldIsBlockContainer = MediumEditor.util.isBlockContainer
@@ -307,13 +82,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
         $scope.mode = $storage.get('editor-mode', 'html')
 
         wysiwigService.loadEmojis()
-
-        if !languages.length
-            $.getJSON("/#{window._version}/prism/prism-languages.json").then (_languages_) ->
-                languages = _.map _languages_, (it) ->
-                    languages.url = "/#{window._version}/prism/" + it.file
-
-                    return it
 
         setHtmlMedium = (markdown) ->
             html = wysiwigService.getHTML(markdown)
@@ -367,19 +135,17 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             editorMedium.html('')
 
         refreshExtras = () ->
-            if $scope.mode == 'html'
-                if $scope.editMode
-                    animationFrame.add () ->
-                        addCodeLanguageSelectors(mediumInstance)
-                        removeHightlighter(mediumInstance)
+            animationFrame.add () ->
+                if $scope.mode == 'html'
+                    if $scope.editMode
+                        wysiwygCodeHightlighterService.addCodeLanguageSelectors(mediumInstance)
+                        wysiwygCodeHightlighterService.removeHightlighter(mediumInstance)
+                    else
+                        wysiwygCodeHightlighterService.addHightlighter(mediumInstance)
+                        wysiwygCodeHightlighterService.removeCodeLanguageSelectors(mediumInstance)
                 else
-                    animationFrame.add () ->
-                        addHightlighter(mediumInstance)
-                        removeCodeLanguageSelectors(mediumInstance)
-            else
-                animationFrame.add () ->
-                    removeHightlighter(mediumInstance)
-                    removeCodeLanguageSelectors(mediumInstance)
+                    wysiwygCodeHightlighterService.removeHightlighter(mediumInstance)
+                    wysiwygCodeHightlighterService.removeCodeLanguageSelectors(mediumInstance)
 
         saveEnd = () ->
             $scope.saving  = false
@@ -442,19 +208,10 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                 store.text = markdown
                 $storage.set($scope.storageKey, store)
 
-        updateCodeLanguageSelector = () ->
-            $('.medium-' + mediumInstance.id).each (index, tab) ->
-                node = $('.' + tab.dataset.tabId)
-
-                if !node.length
-                    tab.remove()
-                else
-                    positionCodeTab(node.parent()[0], tab)
-
         change = () ->
             if $scope.mode == 'html'
                 $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
-                updateCodeLanguageSelector()
+                wysiwygCodeHightlighterService.updateCodeLanguageSelector(mediumInstance)
 
             localSave($scope.markdown)
 
@@ -492,11 +249,13 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                 term = taiga.slugify(term)
 
                 searchTypes = ['issues', 'tasks', 'userstories']
+
                 urls = {
                     issues: "project-issues-detail",
                     tasks: "project-tasks-detail",
                     userstories: "project-userstories-detail"
                 }
+
                 searchProps = ['ref', 'subject']
 
                 filter = (item) =>
@@ -557,8 +316,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                         'h2',
                         'h3',
                         'quote',
-                        'code',
-                        'pre'
+                        'code'
                     ]
                 },
                 extensions: {
@@ -618,7 +376,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.$watch () ->
                 return $scope.mode + ":" + $scope.editMode
-            , () ->
+            , (xxx) ->
                 $scope.$applyAsync(refreshExtras)
 
         unwatch = $scope.$watch 'content', (content) ->
@@ -649,6 +407,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
         $scope.$on "$destroy", () ->
             if mediumInstance
+                removeCodeLanguageSelectors(mediumInstance)
                 mediumInstance.destroy()
 
     return {
@@ -666,7 +425,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
         link: link
     }
 
-module.directive("tgMedium", [
+angular.module("taigaComponents").directive("tgWysiwyg", [
     "$translate",
     "$tgConfirm",
     "$tgStorage",
@@ -676,5 +435,6 @@ module.directive("tgMedium", [
     "tgWysiwigService",
     "animationFrame",
     "tgLoader",
+    "tgWysiwygCodeHightlighterService",
     Medium
 ])

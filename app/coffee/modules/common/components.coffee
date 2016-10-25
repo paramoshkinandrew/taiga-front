@@ -579,7 +579,7 @@ module.directive("tgEditableSubject", ["$rootScope", "$tgRepo", "$tgConfirm", "$
                                        "$tgTemplate", EditableSubjectDirective])
 
 # comments
-CommentMedium = (attachmentsFullService) ->
+CommentWysiwyg = (attachmentsFullService) ->
     link = ($scope, $el, $attrs) ->
         $scope.editableDescription = false
 
@@ -617,7 +617,7 @@ CommentMedium = (attachmentsFullService) ->
         link: link,
         template: """
             <div>
-                <tg-medium
+                <tg-wysiwyg
                     required
                     not-persist
                     placeholder='{{"COMMENTS.TYPE_NEW_COMMENT" | translate}}'
@@ -625,16 +625,16 @@ CommentMedium = (attachmentsFullService) ->
                     content='content'
                     on-save='saveComment(text, cb)'
                     on-upload-file='uploadFiles(files, cb)'>
-                </tg-medium>
+                </tg-wysiwyg>
             </div>
         """
     }
 
-module.directive("tgCommentMedium", [
+module.directive("tgCommentWysiwyg", [
     "tgAttachmentsFullService",
-    CommentMedium])
+    CommentWysiwyg])
 
-CommentEditMedium = (attachmentsFullService) ->
+CommentEditWysiwyg = (attachmentsFullService) ->
     link = ($scope, $el, $attrs) ->
         types = {
             userstories: "us",
@@ -655,24 +655,24 @@ CommentEditMedium = (attachmentsFullService) ->
         link: link,
         template: """
             <div>
-                <tg-medium
+                <tg-wysiwyg
                     editonly
                     required
                     content='vm.comment.comment'
                     on-save="vm.saveComment(text, cb)"
                     on-cancel="vm.onEditMode({commentId: vm.comment.id})"
                     on-upload-file='uploadFiles(files, cb)'>
-                </tg-medium>
+                </tg-wysiwyg>
             </div>
         """
     }
 
-module.directive("tgCommentEditMedium", [
+module.directive("tgCommentEditWysiwyg", [
     "tgAttachmentsFullService",
-    CommentEditMedium])
+    CommentEditWysiwyg])
 
 # Used in details descriptions
-ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $translate) ->
+ItemWysiwyg = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $translate) ->
     link = ($scope, $el, $attrs) ->
         $scope.editableDescription = false
 
@@ -716,7 +716,7 @@ ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $tr
         link: link,
         template: """
             <div>
-                <tg-medium
+                <tg-wysiwyg
                     ng-if="editableDescription"
                     placeholder='{{"COMMON.DESCRIPTION.EMPTY" | translate}}'
                     version='version'
@@ -724,7 +724,7 @@ ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $tr
                     content='item.description'
                     on-save='saveDescription(text, cb)'
                     on-upload-file='uploadFiles(files, cb)'>
-                </tg-medium>
+                </tg-wysiwyg>
 
                 <div
                     class="wysiwyg"
@@ -740,13 +740,13 @@ ItemMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService, $tr
         """
     }
 
-module.directive("tgItemMedium", [
+module.directive("tgItemWysiwyg", [
     "$tgQueueModelTransformation",
     "$rootScope",
     "$tgConfirm",
     "tgAttachmentsFullService",
     "$translate",
-    ItemMedium])
+    ItemWysiwyg])
 
 #############################################################################
 ## Common list directives

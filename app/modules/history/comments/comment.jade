@@ -21,7 +21,7 @@
         .comment-container
             .comment-text.wysiwyg(
                 ng-if="!vm.editMode"
-                ng-bind-html="vm.comment.comment_html"
+                ng-bind-html="vm.comment.comment | markdownToHTML"
             )
             .comment-editor(
                 ng-if="vm.editMode"

@@ -215,7 +215,7 @@ WikiSummaryDirective = ($log, $template, $compile, $translate, avatarService) ->
 
 module.directive("tgWikiSummary", ["$log", "$tgTemplate", "$compile", "$translate",  "tgAvatarService", WikiSummaryDirective])
 
-WikiMedium = ($modelTransform, $rootscope, $confirm, attachmentsFullService,
+WikiWysiwyg = ($modelTransform, $rootscope, $confirm, attachmentsFullService,
 $qqueue, $repo, $analytics, wikiHistoryService) ->
     link = ($scope, $el, $attrs) ->
         $scope.editableDescription = false
@@ -264,14 +264,14 @@ $qqueue, $repo, $analytics, wikiHistoryService) ->
         link: link,
         template: """
             <div>
-                <tg-medium
+                <tg-wysiwyg
                     ng-if="editableDescription"
                     version='version'
                     storage-key='storageKey'
                     content='item.content'
                     on-save='saveDescription(text, cb)'
                     on-upload-file='uploadFiles(files, cb)'>
-                </tg-medium>
+                </tg-wysiwyg>
 
                 <div
                     class="wysiwyg"
@@ -287,10 +287,10 @@ $qqueue, $repo, $analytics, wikiHistoryService) ->
         """
     }
 
-module.directive("tgWikiMedium", [
+module.directive("tgWikiWysiwyg", [
     "$tgQueueModelTransformation",
     "$rootScope",
     "$tgConfirm",
     "tgAttachmentsFullService",
     "$tgQqueue", "$tgRepo", "$tgAnalytics", "tgWikiHistoryService"
-    WikiMedium])
+    WikiWysiwyg])
