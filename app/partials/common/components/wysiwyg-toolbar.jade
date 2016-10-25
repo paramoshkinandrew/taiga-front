@@ -2,7 +2,10 @@
     div(ng-if="outdated")
         p.outdated {{'COMMON.WYSIWYG.OUTDATED' | translate}}
 
-    .medium.wysiwyg(ng-show="mode == 'html'")
+    .medium.wysiwyg(
+        type="text",
+        ng-show="mode == 'html'"
+    )
 
     textarea.markdown(
         placeholder="{{placeholder}}"

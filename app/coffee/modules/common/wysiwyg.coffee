@@ -133,12 +133,14 @@ removeCodeLanguageSelectors = (mediumInstance) ->
 
 addCodeLanguageSelectors = (mediumInstance) ->
     $('code').each (index, code) ->
-        if !$(code).hasClass('has-code-language-selector')
-            $(code).addClass('has-code-language-selector')
+        if !code.classList.contains('has-code-language-selector')
+            code.classList.add('has-code-language-selector')
 
             currentLan = getLanguageByClassList(code.classList)
 
             preRects = code.parentElement.getBoundingClientRect()
+
+            id = new Date().getTime()
 
             text = document.createTextNode(currentLan || 'text')
 
@@ -149,12 +151,17 @@ addCodeLanguageSelectors = (mediumInstance) ->
                     if lan
                         tab.innerText = lan
                         positionCodeTab(code.parentElement, tab)
-                        code.className = 'has-code-language-selector language-' + lan + ' ' + lan
+                        code.classList.add('language-' + lan)
+                        code.classList.add(lan)
 
             document.body.appendChild(tab)
-            $(code).data('tab', tab)
 
-            tab.className = 'code-language-selector medium-' + mediumInstance.id
+            code.classList.add(id)
+            code.dataset.tab = tab
+
+            tab.classList.add('code-language-selector')
+            tab.classList.add('medium-' + mediumInstance.id)
+            tab.dataset.tabId = id
 
             positionCodeTab(code.parentElement, tab)
 
@@ -274,7 +281,7 @@ class WysiwigService
 
 module.service("tgWysiwigService", WysiwigService)
 
-Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame) ->
+Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwigService, animationFrame, tgLoader) ->
     # bug
     # <pre><code></code></pre> the enter doesn't work
     oldIsBlockContainer = MediumEditor.util.isBlockContainer
@@ -308,16 +315,9 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
                     return it
 
-        preLoadHtml = () ->
-            editorMedium.find('li:has(input)').addClass('list-style-none')
-
-            refreshExtras()
-
         setHtmlMedium = (markdown) ->
             html = wysiwigService.getHTML(markdown)
             editorMedium.html(html)
-
-            preLoadHtml()
 
         $scope.setMode = (mode) ->
             $storage.set('editor-mode', mode)
@@ -329,8 +329,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.mode = mode
             mediumInstance.trigger('editableBlur', {}, editorMedium[0])
-
-            refreshExtras()
 
         $scope.save = () ->
             if $scope.mode == 'html'
@@ -361,7 +359,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
             $scope.outdated = false
 
             $scope.onCancel()
-            refreshExtras()
 
             return
 
@@ -395,7 +392,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             discardLocalStorage()
             mediumInstance.trigger('blur', {}, editorMedium[0])
-            refreshExtras()
 
         uploadEnd = (name, url) ->
             if taiga.isImage(name)
@@ -446,9 +442,19 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                 store.text = markdown
                 $storage.set($scope.storageKey, store)
 
+        updateCodeLanguageSelector = () ->
+            $('.medium-' + mediumInstance.id).each (index, tab) ->
+                node = $('.' + tab.dataset.tabId)
+
+                if !node.length
+                    tab.remove()
+                else
+                    positionCodeTab(node.parent()[0], tab)
+
         change = () ->
             if $scope.mode == 'html'
                 $scope.markdown = wysiwigService.getMarkdown(editorMedium.html())
+                updateCodeLanguageSelector()
 
             localSave($scope.markdown)
 
@@ -524,7 +530,7 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
                         resolve(result.slice(0, 10))
 
-        throttleChange = _.throttle(change, 1000)
+        throttleChange = _.throttle(change, 200)
 
         create = (text, editMode=false) ->
             if text.length
@@ -585,7 +591,6 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                 $scope.$applyAsync () ->
                     if !$scope.editMode
                         $scope.editMode = true
-                        refreshExtras()
 
             mediumInstance.subscribe 'editableDrop', (event) ->
                 $scope.onUploadFile({files: event.dataTransfer.files, cb: uploadEnd})
@@ -609,9 +614,14 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
 
             $scope.editMode = editMode
 
-            preLoadHtml()
+            $scope.$applyAsync(refreshExtras)
 
-        $scope.$watch 'content', (content) ->
+            $scope.$watch () ->
+                return $scope.mode + ":" + $scope.editMode
+            , () ->
+                $scope.$applyAsync(refreshExtras)
+
+        unwatch = $scope.$watch 'content', (content) ->
             if !_.isUndefined(content)
                 $scope.outdated = isOutdated()
 
@@ -628,7 +638,14 @@ Medium = ($translate, $confirm, $storage, $rs, projectService, $navurls, wysiwig
                 if mediumInstance
                     mediumInstance.destroy()
 
-                create(content, $scope.editMode)
+                if tgLoader.open()
+                    unwatchLoader = tgLoader.onEnd () ->
+                        create(content, $scope.editMode)
+                        unwatchLoader()
+                else
+                    create(content, $scope.editMode)
+
+                unwatch()
 
         $scope.$on "$destroy", () ->
             if mediumInstance
@@ -658,5 +675,6 @@ module.directive("tgMedium", [
     "$tgNavUrls",
     "tgWysiwigService",
     "animationFrame",
+    "tgLoader",
     Medium
 ])
