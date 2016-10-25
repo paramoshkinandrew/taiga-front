@@ -14,26 +14,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-# File: like-project-button.controller.coffee
+# File: lb-contact-team.directive.coffee
 ###
 
-class ContactProjectButtonController
-    @.$inject = ['tgLightboxFactory']
+ContactTeamLbDirective = (lightboxService) ->
 
-    constructor: (@lightboxFactory)->
+    @.inject = ['lightboxService']
 
-    launchContactForm: () ->
-        console.log @.project
-        @lightboxFactory.create(
-            'tg-lb-contact-team',
-            {
-                "class": "lightbox lightbox-contact-team",
-                "project": "project"
-            },
-            {
-                "project": @.project
-            }
-        )
+    link = (scope, el) ->
+        lightboxService.open(el)
 
+    return {
+        scope: {}
+        controller: "ContactTeamLbCtrl",
+        bindToController: {
+            project: '='
+        }
+        controllerAs: "vm",
+        templateUrl: "projects/components/lb-contact-team/lb-contact-team.html",
+        link: link
+    }
 
-angular.module("taigaProjects").controller("ContactProjectButtonCtrl", ContactProjectButtonController)
+angular.module("taigaProjects").directive("tgLbContactTeam", ["lightboxService", ContactTeamLbDirective])

@@ -41,7 +41,7 @@
         }
     }
     .watch-options-arrow {
-        margin-left: .25rem;
+        margin-left: auto;
     }
     .icon-arrow-down {
         @include svg-size(.75rem);
@@ -78,79 +78,6 @@
     padding: .25rem .75rem;
 }
 
-
-//
-// .track-button {
-//     display: flex;
-//     background: $mass-white;
-//     &:hover {
-//         background: darken($mass-white, 5%);
-//         transition: background .3s;
-//     }
-//     .track-inner {
-//         min-width: 140px;
-//         align-items: center;
-//         border-radius: 4px 0 0 4px;
-//         display: flex;
-//         flex: 1;
-//         flex-basis: 140px;
-//         justify-content: flex-start;
-//     }
-//     .watch-options-arrow {
-//         margin: 0 .5rem 0 auto;
-//         svg {
-//             @include svg-size(.75rem);
-//         }
-//     }
-//     &:hover {
-//         color: $blackish;
-//     }
-//     &.active {
-//         .track-inner {
-//             background: rgba($primary-light, .2);
-//         }
-//         .track-icon {
-//             svg {
-//                 fill: $primary;
-//             }
-//         }
-//     }
-//     &.watch-container {
-//         margin-right: 1rem;
-//         position: relative;
-//     }
-//     .track-icon {
-//         padding: .3rem .6rem .3rem .75rem;
-//         svg {
-//             fill: $grayer;
-//             position: relative;
-//             top: 2px;
-//         }
-//     }
-//     .track-button-counter {
-//         align-items: center;
-//         border: 1px solid $whitish;
-//         display: flex;
-//         justify-content: center;
-//         min-width: 2rem;
-//     }
-// }
-// .watch-button,
-// .like-button {
-//     &.active {
-//         &.is-hover {
-//             .track-inner {
-//                 background: $red;
-//                 color: $whitish;
-//                 transition: background .3s;
-//             }
-//             svg {
-//                 fill: $red-light;
-//             }
-//         }
-//     }
-// }
-//
 .watch-options {
     animation: dropdownFade .2s cubic-bezier(.09, 0, .99, .01) alternate;
     background: rgba($black, .9);
