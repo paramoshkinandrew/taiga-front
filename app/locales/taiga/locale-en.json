@@ -194,6 +194,7 @@
             "BUTTON_TITLE": "Upvote/Downvote this item",
             "COUNTER_TITLE": "{total, plural, one{one vote} other{# votes}}"
         },
+
         "CUSTOM_ATTRIBUTES": {
             "CUSTOM_FIELDS": "Custom Fields",
             "SAVE": "Save Custom Field",
@@ -228,32 +229,7 @@
             }
         },
         "WYSIWYG": {
-            "H1_BUTTON": "First Level Heading",
-            "H1_SAMPLE_TEXT": "Your title here...",
-            "H2_BUTTON": "Second Level Heading",
-            "H2_SAMPLE_TEXT": "Your title here...",
-            "H3_BUTTON": "Third Level Heading",
-            "H3_SAMPLE_TEXT": "Your title here...",
-            "BOLD_BUTTON": "Bold",
-            "BOLD_BUTTON_SAMPLE_TEXT": "Your text here...",
-            "ITALIC_BUTTON": "Italic",
-            "ITALIC_SAMPLE_TEXT": "Your text here...",
-            "STRIKE_BUTTON": "Strike",
-            "STRIKE_SAMPLE_TEXT": "Your text here...",
-            "BULLETED_LIST_BUTTON": "Bulleted List",
-            "BULLETED_LIST_SAMPLE_TEXT": "Your text here...",
-            "NUMERIC_LIST_BUTTON": "Numeric List",
-            "NUMERIC_LIST_SAMPLE_TEXT": "Your text here...",
-            "PICTURE_BUTTON": "Picture",
-            "PICTURE_SAMPLE_TEXT": "Your alternative text to picture here...",
-            "LINK_BUTTON": "Link",
-            "LINK_SAMPLE_TEXT": "Your text to link here....",
-            "QUOTE_BLOCK_BUTTON": "Quote Block",
-            "QUOTE_BLOCK_SAMPLE_TEXT": "Your text here...",
-            "CODE_BLOCK_BUTTON": "Code Block",
-            "CODE_BLOCK_SAMPLE_TEXT": "Your text here...",
-            "PREVIEW_BUTTON": "Preview",
-            "EDIT_BUTTON": "Edit",
+            "OUTDATED": "Another person has made changes while you were editing. Check the new version on the activiy tab before you save your changes.",
             "ATTACH_FILE_HELP": "Attach files by dragging & dropping on the textarea above.",
             "ATTACH_FILE_HELP_SAVE_FIRST": "Save first before if you want to attach files by dragging & dropping on the textarea above.",
             "MARKDOWN_HELP": "Markdown syntax help"
@@ -544,6 +520,7 @@
             "RECRUITING": "Is this project looking for people?",
             "RECRUITING_MESSAGE": "Who are you looking for?",
             "RECRUITING_PLACEHOLDER": "Define the profiles you are looking for",
+            "FEEDBACK": "Receive feedback from Taiga users?",
             "PUBLIC_PROJECT": "Public project",
             "PRIVATE_PROJECT": "Private project",
             "PRIVATE_OR_PUBLIC": "What's the difference between public and private projects?",
@@ -596,6 +573,7 @@
             "ISSUE_DESCRIPTION": "Issues custom fields",
             "ISSUE_ADD": "Add a custom field in issues",
             "FIELD_TYPE_TEXT": "Text",
+            "FIELD_TYPE_RICHTEXT": "Rich text",
             "FIELD_TYPE_MULTI": "Multi-line",
             "FIELD_TYPE_DATE": "Date",
             "FIELD_TYPE_URL": "Url"
@@ -984,6 +962,10 @@
                 "UNWATCH": "Unwatch",
                 "UNWATCH_TITLE": "Unwatch this project"
             }
+        },
+        "CONTACT_BUTTON": {
+            "CONTACT_TITLE": "Contact the project team",
+            "CONTACT_BUTTON": "Contact the project"
         }
     },
     "LIGHTBOX": {
@@ -1069,6 +1051,12 @@
             "TITLE": "Who do you want to be the new project owner?",
             "ADD_COMMENT": "Add comment",
             "BUTTON": "Ask this project member to become the new project owner"
+        },
+        "CONTACT_PROJECT": {
+            "TITLE": "Send an email to",
+            "WARNING": "The email will be received by the project admins",
+            "PLACEHOLDER": "Write your message",
+            "SEND": "Send"
         }
     },
     "EPIC": {
@@ -1120,7 +1108,7 @@
             "CLOSE": "Close",
             "SYNCHRONIZE_LINK": "synchronize with Taiga Tribe",
             "PUBLISH_MORE_INFO_TITLE": "Do you need somebody for this task?",
-            "PUBLISH_MORE_INFO_TEXT": "<p>If you need help with a particular piece of work you can easily create gigs on<a href='taigatribe.com' title='Taiga Tribe'> Taiga Tribe </a> and receive help from all over the world. You will be able to control and manage the gig enjoying a great community eager to contribute.</p><p><a href='taigatribe.com' title='Taiga Tribe'> TaigaTribe </a>  was born as a Taiga sibling. Both platforms can live separately but we believe that there is much power in using them combined so we are making sure the integration works like a charm.</p>"
+            "PUBLISH_MORE_INFO_TEXT": "<p>If you need help with a particular piece of work you can easily create gigs on<a href='http://taigatribe.com' title='Taiga Tribe'> Taiga Tribe </a> and receive help from all over the world. You will be able to control and manage the gig enjoying a great community eager to contribute.</p><p><a href='http://taigatribe.com' title='Taiga Tribe'> TaigaTribe </a>  was born as a Taiga sibling. Both platforms can live separately but we believe that there is much power in using them combined so we are making sure the integration works like a charm.</p>"
         },
         "FIELDS": {
             "TEAM_REQUIREMENT": "Team Requirement",
@@ -1248,6 +1236,12 @@
             "TOGGLE": "Toggle tags visibility",
             "SHOW": "Show tags",
             "HIDE": "Hide tags"
+        },
+        "FORECASTING": {
+            "TITLE": "Velocity forecasting",
+            "BACKLOG": "Display backlog",
+            "NEW_SPRINT": "Candidate User Stories for your next sprint based on your velocity. Click to create a new sprint.",
+            "CURRENT_SPRINT": "Candidate User Stories for your sprint based on your velocity. Click to add to current sprint."
         },
         "TABLE": {
             "COLUMN_US": "User Stories",

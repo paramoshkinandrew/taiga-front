@@ -75,7 +75,6 @@ sizeFormat = =>
 
 module.filter("sizeFormat", sizeFormat)
 
-
 toMutableFilter =  ->
     toMutable = (js) ->
       return js.toJS()
@@ -127,3 +126,20 @@ darkerFilter = ->
 
 
 module.filter("darker", darkerFilter)
+
+markdownToHTML = (wysiwigService) ->
+    return (input) ->
+        if input
+            return wysiwigService.getHTML(input)
+
+        return ""
+
+module.filter("markdownToHTML", ["tgWysiwygService", markdownToHTML])
+
+inArray = ($filter) ->
+    return (list, arrayFilter, element) ->
+        if arrayFilter
+            filter = $filter("filter")
+            return filter list, (listItem) ->
+                return arrayFilter.indexOf(listItem[element]) != -1
+module.filter("inArray", ["$filter", inArray])

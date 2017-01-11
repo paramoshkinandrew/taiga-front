@@ -41,7 +41,7 @@
         "LOGOUT": "Cerrar sesión",
         "EXTERNAL_USER": "un usuario externo",
         "GENERIC_ERROR": "Uno de nuestros Oompa Loompas dice {{error}}.",
-        "IOCAINE_TEXT": "¿Te sientes fuera de tu zona de confort en una tarea? Asegúrate de que los demás están al tanto de ello, marca el check de la Iocaína al editar una tarea. Igual eu era posible llegar a ser inmune a este veneno mortal a base de consumir pequeñas dosis a lo largo del tiempo, es posible conseguir mejor en lo que estás haciendo si afrontas de vez en cuando esta clase de retos!",
+        "IOCAINE_TEXT": "This member is feeling a bit overwhelmed by this task. Will become immune to the iocaine poison over time with your help. For now, may need a hug.",
         "CLIENT_REQUIREMENT": "Requerimiento de cliente es un nuevo requisito que no se esperaba y es necesario que forme parte del proyecto.",
         "TEAM_REQUIREMENT": "Requerimiento del equipo es un nuevo requisito que debe existir en el proyecto pero que no conllevará ningún coste para el cliente.",
         "OWNER": "Dueño del proyecto",
@@ -227,32 +227,7 @@
             }
         },
         "WYSIWYG": {
-            "H1_BUTTON": "Título de primer nivel",
-            "H1_SAMPLE_TEXT": "Tu título aquí...",
-            "H2_BUTTON": "Título de segundo nivel",
-            "H2_SAMPLE_TEXT": "Tu título aquí...",
-            "H3_BUTTON": "Título de tercer nivel",
-            "H3_SAMPLE_TEXT": "Tu título aquí...",
-            "BOLD_BUTTON": "Negrita",
-            "BOLD_BUTTON_SAMPLE_TEXT": "Tu texto aquí...",
-            "ITALIC_BUTTON": "Cursiva",
-            "ITALIC_SAMPLE_TEXT": "Tu texto aquí...",
-            "STRIKE_BUTTON": "Tachado",
-            "STRIKE_SAMPLE_TEXT": "Tu texto aquí...",
-            "BULLETED_LIST_BUTTON": "Lista con viñetas",
-            "BULLETED_LIST_SAMPLE_TEXT": "Tu texto aquí...",
-            "NUMERIC_LIST_BUTTON": "Lista numérica",
-            "NUMERIC_LIST_SAMPLE_TEXT": "Tu texto aquí...",
-            "PICTURE_BUTTON": "Imagen",
-            "PICTURE_SAMPLE_TEXT": "Tu texto alternatívo para la imagen aquí...",
-            "LINK_BUTTON": "Enlace",
-            "LINK_SAMPLE_TEXT": "Tu texto del enlace aquí...",
-            "QUOTE_BLOCK_BUTTON": "Cita",
-            "QUOTE_BLOCK_SAMPLE_TEXT": "Tu texto aquí...",
-            "CODE_BLOCK_BUTTON": "Código",
-            "CODE_BLOCK_SAMPLE_TEXT": "Tu texto aquí...",
-            "PREVIEW_BUTTON": "Previsualizar",
-            "EDIT_BUTTON": "Editar",
+            "OUTDATED": "Another person has made changes while you were editing. Check the new version on the activiy tab before you save your changes.",
             "ATTACH_FILE_HELP": "Adjunte archivos arrastrando y soltando dentro del area de texto",
             "ATTACH_FILE_HELP_SAVE_FIRST": "Si desea guardar adjuntos guarde primero, luego arrastre y suelte los archivos en el area de texto mas arriba",
             "MARKDOWN_HELP": "Ayuda de sintaxis Markdown"
@@ -543,6 +518,7 @@
             "RECRUITING": "¿Este proyecto está buscando a gente?",
             "RECRUITING_MESSAGE": "¿Qué estás buscando?",
             "RECRUITING_PLACEHOLDER": "Define el perfil de lo que estás buscando",
+            "FEEDBACK": "Receive feedback from Taiga users?",
             "PUBLIC_PROJECT": "Proyecto público",
             "PRIVATE_PROJECT": "Proyecto privado",
             "PRIVATE_OR_PUBLIC": "¿Cuál es la diferencia entre proyecto público y privado?",
@@ -595,6 +571,7 @@
             "ISSUE_DESCRIPTION": "Atributos personalizados de peticiones",
             "ISSUE_ADD": "Añadir un atributo personalizado en las peticiones",
             "FIELD_TYPE_TEXT": "Texto",
+            "FIELD_TYPE_RICHTEXT": "Rich text",
             "FIELD_TYPE_MULTI": "Multilínea",
             "FIELD_TYPE_DATE": "Fecha",
             "FIELD_TYPE_URL": "Url"
@@ -983,6 +960,10 @@
                 "UNWATCH": "No observar",
                 "UNWATCH_TITLE": "Dejar de observar este proyecto"
             }
+        },
+        "CONTACT_BUTTON": {
+            "CONTACT_TITLE": "Contact the project team",
+            "CONTACT_BUTTON": "Contact the project"
         }
     },
     "LIGHTBOX": {
@@ -1068,6 +1049,12 @@
             "TITLE": "¿A quién quiere ser el nuevo dueño del proyecto?",
             "ADD_COMMENT": "Añadir comentario",
             "BUTTON": "Pregunte a este usuario para convertirlo en el nuero dueño del proyecto"
+        },
+        "CONTACT_PROJECT": {
+            "TITLE": "Send an email to",
+            "WARNING": "The email will be received by the project admins",
+            "PLACEHOLDER": "Write your message",
+            "SEND": "Send"
         }
     },
     "EPIC": {
@@ -1082,12 +1069,12 @@
         "EXISTING_USERSTORY": "Historia de usuario existente",
         "CHOOSE_PROJECT_FOR_CREATION": "¿Qué es el proyecto?",
         "SUBJECT": "Asunto",
-        "SUBJECT_BULK_MODE": "Subject (bulk insert)",
+        "SUBJECT_BULK_MODE": "Tema (inserción masiva)",
         "CHOOSE_PROJECT_FROM": "¿Qué es el proyecto?",
         "CHOOSE_USERSTORY": "Cual es la historia de usuario?",
         "NO_USERSTORIES": "Este proyecto no tiene historias de usuario todavia. Por favor, seleccione otro proyecto.",
         "FILTER_USERSTORIES": "Filtrar historias de usuario",
-        "LIGHTBOX_TITLE_BLOKING_EPIC": "Blocking epic",
+        "LIGHTBOX_TITLE_BLOKING_EPIC": "Bloqueo de épica",
         "ACTION_DELETE": "Borrar epic"
     },
     "US": {
@@ -1119,7 +1106,7 @@
             "CLOSE": "Cerrar",
             "SYNCHRONIZE_LINK": "sincronizar con la Tribu Taiga",
             "PUBLISH_MORE_INFO_TITLE": "Necesita a alguien para esta tarea?",
-            "PUBLISH_MORE_INFO_TEXT": "<p>SI necesita ayuda con una parte especifica del trabajo puede crear facilmente gigs en<a href='taigatribe.com' title='Taiga Tribe'> la Tribu Taiga </a> y recibir ayuda de todo el mundo. Tendra la habilidad de manejar y controlar su gig disfrutando de una comunidad dispuesta a colaborar.</p><p><a href='taigatribe.com' title='Tribu Taiga'> la Tribu Taiga </a>  nacio como una rama de Taiga. Ambas plataformas viven separadas Pero creemos que hay mucho poder al usarlas combinadamente y asi aseguramos que la integracion funciona muy bien.</p>"
+            "PUBLISH_MORE_INFO_TEXT": "<p>If you need help with a particular piece of work you can easily create gigs on<a href='http://taigatribe.com' title='Taiga Tribe'> Taiga Tribe </a> and receive help from all over the world. You will be able to control and manage the gig enjoying a great community eager to contribute.</p><p><a href='http://taigatribe.com' title='Taiga Tribe'> TaigaTribe </a>  was born as a Taiga sibling. Both platforms can live separately but we believe that there is much power in using them combined so we are making sure the integration works like a charm.</p>"
         },
         "FIELDS": {
             "TEAM_REQUIREMENT": "Requerido por el Equipo",
@@ -1247,6 +1234,12 @@
             "TOGGLE": "Cambia la visibilidad de los tags",
             "SHOW": "Mostrar etiquetas",
             "HIDE": "Ocultar etiquetas"
+        },
+        "FORECASTING": {
+            "TITLE": "Velocity forecasting",
+            "BACKLOG": "Display backlog",
+            "NEW_SPRINT": "Candidate User Stories for your next sprint based on your velocity. Click to create a new sprint.",
+            "CURRENT_SPRINT": "Candidate User Stories for your sprint based on your velocity. Click to add to current sprint."
         },
         "TABLE": {
             "COLUMN_US": "Historias de Usuario",
